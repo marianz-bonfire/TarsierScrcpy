@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
-import { encodeUtf8 } from '@yume-chan/adb';
-import client from '../Scrcpy/adb-client';
-import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
+import { encodeUtf8 } from '@yume-chan/adb';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import client from '../Scrcpy/adb-client';
 
 const term = ref<HTMLDivElement | null>(null);
 
@@ -16,7 +16,7 @@ function fitTerminal() {
     try {
         fitAddon?.fit();
     } catch {
-        /* 容器尺寸为 0 时可能抛错 */
+        /* May throw error when container size is 0 */
     }
 }
 
@@ -24,7 +24,7 @@ onMounted(async () => {
     try {
         await startTerminal();
     } catch (error) {
-        console.error('启动终端时出错:', error);
+        console.error('Error starting terminal:', error);
     }
 });
 
@@ -44,7 +44,7 @@ async function startTerminal() {
         terminal = null;
     }
     if (!client.device) {
-        console.error('设备未设置');
+        console.error('Device not set');
         return;
     }
     terminal = new Terminal({
@@ -90,7 +90,7 @@ async function startTerminal() {
 
     const process = await client.device?.subprocess.shellProtocol!.pty();
     if (!process) {
-        console.error('获取 subprocess 失败');
+        console.error('Failed to get subprocess');
         return;
     }
 
@@ -103,14 +103,14 @@ async function startTerminal() {
             }) as any
         )
         .catch((error) => {
-            console.error('输出流错误:', error);
+            console.error('Output stream error:', error);
         });
 
     const writer = process.input.getWriter();
     terminal.onData((data) => {
         const buffer = encodeUtf8(data);
         writer.write(buffer).catch((error) => {
-            console.error('写入流错误:', error);
+            console.error('Write stream error:', error);
         });
     });
 }
@@ -125,15 +125,15 @@ function clearTerminal() {
 <template>
     <div class="device-shell-card">
         <div class="shell-toolbar">
-            <span class="shell-title">设备终端</span>
+            <span class="shell-title">Device Terminal</span>
             <div class="shell-actions">
                 <v-btn color="primary" variant="text" size="small" @click="startTerminal" class="mr-1">
                     <v-icon size="16">mdi-restart</v-icon>
-                    重启
+                    Restart
                 </v-btn>
                 <v-btn color="secondary" variant="text" size="small" @click="clearTerminal">
                     <v-icon size="16">mdi-delete</v-icon>
-                    清除
+                    Clear
                 </v-btn>
             </div>
         </div>
@@ -179,7 +179,7 @@ function clearTerminal() {
     overflow: hidden;
 }
 
-/* xterm 默认不随 flex 父级撑满高度，需强制铺满容器 */
+/* xterm by default does not fill height with flex parent, need to force fill container */
 .terminal-container :deep(.xterm) {
     position: absolute;
     inset: 0;

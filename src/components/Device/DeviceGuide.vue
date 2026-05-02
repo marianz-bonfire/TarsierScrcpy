@@ -1,19 +1,19 @@
 <template>
-    <button class="dd-icon-btn" @click="guideDialogVisible = true" title="帮助文档">
+    <button class="dd-icon-btn" @click="guideDialogVisible = true" title="Help Documentation">
         <v-icon size="18">mdi-help-circle-outline</v-icon>
     </button>
 
     <v-dialog v-model="guideDialogVisible" max-width="560">
         <div class="guide-dialog">
             <div class="gd-header">
-                <span class="gd-title">添加设备指南</span>
+                <span class="gd-title">Device Setup Guide</span>
                 <button class="gd-close" @click="guideDialogVisible = false">
                     <v-icon size="18">mdi-close</v-icon>
                 </button>
             </div>
 
             <div class="gd-body">
-                <p class="gd-section-label">步骤说明</p>
+                <p class="gd-section-label">Setup Steps</p>
                 <ol class="gd-steps">
                     <li v-for="(step, index) in allSteps" :key="index" class="gd-step">
                         <strong>{{ step.title }}</strong>
@@ -22,7 +22,7 @@
                 </ol>
 
                 <details class="gd-faq">
-                    <summary class="gd-faq-toggle">常见问题 (FAQ)</summary>
+                    <summary class="gd-faq-toggle">Frequently Asked Questions (FAQ)</summary>
                     <div class="gd-faq-list">
                         <div v-for="(item, index) in faqItems" :key="index" class="gd-faq-item">
                             <strong>{{ item.question }}</strong>
@@ -34,7 +34,7 @@
 
             <div class="gd-actions">
                 <v-btn size="small" color="primary" @click="guideDialogVisible = false">
-                    完成
+                    Done
                 </v-btn>
             </div>
         </div>
@@ -42,31 +42,31 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const guideDialogVisible = ref(false);
 
 const developerSteps = [
-    { title: '打开设置', content: '进入您手机的设置应用' },
-    { title: '找到"关于手机"', content: '滚动到设置底部，点击"关于手机"或"关于设备"' },
-    { title: '点击"版本号"', content: '连续点击"版本号"或"构建号码"7次，直到看到"您已成为开发者"的提示' },
-    { title: '返回设置', content: '返回到主设置页面，您应该能看到新的"开发者选项"菜单' },
+    { title: 'Open Settings', content: 'Go to your phone\'s Settings app' },
+    { title: 'Find "About Phone"', content: 'Scroll to the bottom of Settings and tap "About Phone" or "About Device"' },
+    { title: 'Tap "Build Number"', content: 'Tap "Build Number" or "Build Number" 7 times until you see "You are now a developer" message' },
+    { title: 'Return to Settings', content: 'Go back to main Settings, you should see new "Developer Options" menu' },
 ];
 
 const connectionSteps = [
-    { title: '开发者选项', content: '进入"开发者选项"菜单' },
-    { title: '启用USB调试', content: '在开发者选项中，找到并开启"USB调试"开关' },
-    { title: '确认', content: '在弹出的对话框中点击"确定"或"允许"以启用USB调试' },
-    { title: '连接设备', content: '使用USB线将设备连接到电脑，并在设备上允许USB调试' },
+    { title: 'Developer Options', content: 'Go to "Developer Options" menu' },
+    { title: 'Enable USB Debugging', content: 'In Developer Options, find and enable "USB Debugging" switch' },
+    { title: 'Confirm', content: 'Click "OK" or "Allow" in the popup dialog to enable USB debugging' },
+    { title: 'Connect Device', content: 'Connect device to computer using USB cable and allow USB debugging on device' },
 ];
 
 const allSteps = computed(() => [...developerSteps, ...connectionSteps]);
 
 const faqItems = [
-    { question: '如何开启开发者选项？', answer: '进入"设置" > "关于手机"，然后连续点击"版本号"7次。' },
-    { question: '设备未被识别怎么办？', answer: '请确保您的设备驱动已正确安装，并且USB调试模式已开启。尝试重新插拔USB线或重启设备。' },
-    { question: '无法启用USB调试怎么办？', answer: '某些设备可能需要额外的步骤。请查看您设备的具体说明或联系设备制造商获取帮助。' },
-    { question: '连接设备后没有反应怎么办？', answer: '请检查您的USB线是否支持数据传输。某些USB线只能充电，无法传输数据。尝试使用其他USB线或端口。' },
+    { question: 'How to enable Developer Options?', answer: 'Go to "Settings" > "About Phone", then tap "Build Number" 7 times.' },
+    { question: 'What if device is not recognized?', answer: 'Make sure your device drivers are properly installed and USB debugging mode is enabled. Try reconnecting USB cable or restarting device.' },
+    { question: 'What if USB debugging cannot be enabled?', answer: 'Some devices may require additional steps. Please check your device\'s specific instructions or contact device manufacturer for help.' },
+    { question: 'What if nothing happens after connecting device?', answer: 'Check if your USB cable supports data transfer. Some USB cables only support charging, not data transfer. Try using a different USB cable or port.' },
 ];
 </script>
 

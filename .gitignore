@@ -1,9 +1,9 @@
-# 依赖目录
+# Dependency Directory
 node_modules
 .pnp
 .pnp.js
 
-# 日志
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -12,7 +12,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# 编辑器目录和文件
+# Editor Directories and Files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -23,15 +23,23 @@ lerna-debug.log*
 *.sln
 *.sw?
 
-# 测试覆盖率目录
+# Test Coverage Directory
 coverage
 
-# 构建输出目录
+# Build Output Directory
 dist
 dist-ssr
 
-# 本地环境文件
+# Local Environment Files
 *.local
 
-# 类型声明文件
+# Type Declaration Files
 *.d.ts
+
+# Lock Files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# AI generated files and directories
+.continue

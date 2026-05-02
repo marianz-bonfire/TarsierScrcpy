@@ -13,7 +13,7 @@ import {
 import { ArrayBufferTarget, Muxer as WebMMuxer } from 'webm-muxer';
 import { downloadFile } from './file';
 
-// 定义数据包类型
+// Define packet types
 type ScrcpyDataPacket = Extract<ScrcpyMediaStreamPacket, { type: 'data' }>;
 
 // Helper functions
@@ -314,7 +314,7 @@ export class MatroskaMuxingRecorder {
                 .toString()
                 .padStart(2, '0')}.webm`;
 
-            // 使用新的下载函数
+            // Use new download function
             downloadFile(buffer, fileName, 'video/x-matroska');
 
             this.muxer = undefined;

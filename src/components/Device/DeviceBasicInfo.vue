@@ -1,24 +1,24 @@
 <template>
   <v-card class="info-card" elevation="0">
     <div class="info-card-head">
-      <span class="info-card-title">设备信息</span>
+      <span class="info-card-title">Device Info</span>
     </div>
     <v-card-text class="info-card-body pa-0">
       <div class="info-table">
         <div class="info-item">
-          <span class="info-label">品牌</span>
+          <span class="info-label">Brand</span>
           <span class="info-value">{{ deviceInfo.brand }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">型号</span>
+          <span class="info-label">Model</span>
           <span class="info-value">{{ deviceInfo.deviceModel }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">代号</span>
+          <span class="info-label">Codename</span>
           <span class="info-value">{{ deviceInfo.device }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">安卓</span>
+          <span class="info-label">Android</span>
           <span class="info-value">{{ deviceInfo.androidVersion }} (SDK {{ deviceInfo.sdkVersionCode }})</span>
         </div>
         <div class="info-item">
@@ -26,7 +26,7 @@
           <span class="info-value">{{ deviceInfo.cpuAbi }} · {{ deviceInfo.cpuInfo }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">分辨率</span>
+          <span class="info-label">Resolution</span>
           <span class="info-value">{{ deviceInfo.resolution }} @ {{ deviceInfo.screenDensity }}dpi</span>
         </div>
         <div class="info-item">
@@ -34,7 +34,7 @@
           <span class="info-value">{{ deviceInfo.ipAddress || '—' }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">序列号</span>
+          <span class="info-label">Serial</span>
           <span class="info-value">{{ deviceInfo.serialNumber }}</span>
         </div>
         <div class="info-item">
@@ -42,23 +42,23 @@
           <span class="info-value">{{ deviceInfo.rootState }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">BL 锁</span>
+          <span class="info-label">Bootloader</span>
           <span class="info-value">{{ bootloaderStatus }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">A/B 槽</span>
+          <span class="info-label">A/B Slot</span>
           <span class="info-value">{{ abPartitionStatus }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">闪存</span>
+          <span class="info-label">Storage</span>
           <span class="info-value">{{ deviceInfo.storageType }}</span>
         </div>
         <div class="info-item info-item--span">
-          <span class="info-label">开机</span>
+          <span class="info-label">Uptime</span>
           <span class="info-value">{{ uptime }}</span>
         </div>
         <div class="info-item info-item--span">
-          <span class="info-label">内核</span>
+          <span class="info-label">Kernel</span>
           <span class="info-value info-value--wrap">{{ deviceInfo.kernelVersion }}</span>
         </div>
       </div>
@@ -101,10 +101,10 @@ const formatSeconds = (seconds) => {
   const m = Math.floor(seconds % 3600 / 60);
   const s = Math.floor(seconds % 60);
 
-  if (d) parts.push(d + '天');
-  if (h) parts.push(h + '小时');
-  if (m) parts.push(m + '分');
-  if (s || !parts.length) parts.push(s + '秒');
+  if (d) parts.push(d + 'd');
+  if (h) parts.push(h + 'h');
+  if (m) parts.push(m + 'm');
+  if (s || !parts.length) parts.push(s + 's');
 
   return parts.join('');
 };

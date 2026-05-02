@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, provide, nextTick } from 'vue';
 import {
     AndroidMotionEventAction,
     AndroidMotionEventButton,
     ScrcpyPointerId,
     type ScrcpySetClipboardControlMessage,
 } from '@yume-chan/scrcpy';
+import { nextTick, onMounted, onUnmounted, provide, ref } from 'vue';
 import client from '../Scrcpy/adb-client';
 import state from '../Scrcpy/scrcpy-state';
 
@@ -14,7 +14,7 @@ const videoWrapper = ref<HTMLDivElement | null>(null);
 const isVideoContainerFocused = ref(false);
 const isCanvasReady = ref(false);
 const isFullyRendered = ref(false);
-/** 视频流已就绪（有尺寸且 running），用于占位/铺满切换与淡入 */
+/** Video stream ready (has dimensions and running), used for placeholder/fullscreen switching and fade-in */
 const pictureReady = ref(false);
 const videoFadedIn = ref(false);
 const placeholderAspect = ref('9 / 16');
@@ -30,7 +30,7 @@ const MOUSE_EVENT_BUTTON_TO_ANDROID_BUTTON = [
 
 const activePointers = new Set<number>();
 
-/** 键盘/滚轮等需要焦点，避免误触 */
+/** Keyboard/wheel events require focus to avoid accidental triggers */
 const isReady = () => (
     !!state.scrcpy &&
     !!state.canvas &&
@@ -39,7 +39,7 @@ const isReady = () => (
     isFullyRendered.value
 );
 
-/** 触摸轨迹：不要求焦点，避免移出画布后因 blur/失焦导致收不到 up 而卡在按下状态 */
+/** Touch tracking: No focus required, avoids getting stuck in pressed state due to blur/focus loss when moving out of canvas */
 const touchPipelineReady = () => (
     !!state.scrcpy &&
     !!state.canvas &&
@@ -165,7 +165,7 @@ const handlePointerCancel = (e: PointerEvent) => {
     }
 };
 
-/** 浏览器意外释放 capture 时补发 Up，防止设备端一直按住 */
+/** Resend Up when browser unexpectedly releases capture, preventing device from staying pressed */
 const handleLostPointerCapture = (e: PointerEvent) => {
     if (!touchPipelineReady()) return;
     if (!activePointers.has(e.pointerId)) return;
@@ -196,7 +196,7 @@ const handlePaste = async () => {
 
         await state.scrcpy.controller.setClipboard(clipboardMessage);
     } catch (error) {
-        console.error('粘贴到设备失败:', error);
+        console.error('Failed to paste to device:', error);
     }
 };
 

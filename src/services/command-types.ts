@@ -1,36 +1,36 @@
 /**
- * 远程控制命令类型定义
- * 用于 WebRTC DataChannel 传输触摸和按键事件
+ * Remote control command type definitions
+ * Used for WebRTC DataChannel transmission of touch and key events
  */
 
-// 触摸命令
+// Touch command
 export interface TouchCommand {
   type: 'touch';
   action: 'down' | 'move' | 'up';
-  x: number;      // 归一化坐标 0-1
-  y: number;      // 归一化坐标 0-1
+  x: number;      // Normalized coordinates 0-1
+  y: number;      // Normalized coordinates 0-1
   pointerId: number;
 }
 
-// 按键命令
+// Key command
 export interface KeyCommand {
   type: 'key';
   key: 'back' | 'home' | 'recents';
 }
 
-// 远程控制命令联合类型
+// Remote control command union type
 export type RemoteControlCommand = TouchCommand | KeyCommand;
 
 /**
- * 序列化命令为 JSON 字符串
+ * Serialize command to JSON string
  */
 export function serializeCommand(cmd: RemoteControlCommand): string {
   return JSON.stringify(cmd);
 }
 
 /**
- * 反序列化 JSON 字符串为命令对象
- * 返回 null 如果解析失败或格式无效
+ * Deserialize JSON string to command object
+ * Returns null if parsing fails or format is invalid
  */
 export function deserializeCommand(data: string): RemoteControlCommand | null {
   try {
@@ -66,14 +66,14 @@ export function deserializeCommand(data: string): RemoteControlCommand | null {
 }
 
 /**
- * 类型守卫：判断是否为 TouchCommand
+ * Type guard: Check if it's a TouchCommand
  */
 export function isTouchCommand(cmd: RemoteControlCommand): cmd is TouchCommand {
   return cmd.type === 'touch';
 }
 
 /**
- * 类型守卫：判断是否为 KeyCommand
+ * Type guard: Check if it's a KeyCommand
  */
 export function isKeyCommand(cmd: RemoteControlCommand): cmd is KeyCommand {
   return cmd.type === 'key';

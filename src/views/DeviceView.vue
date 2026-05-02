@@ -1,24 +1,24 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, shallowRef, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { useDisplay } from "vuetify";
-import PairedDevices from "../components/Device/PairedDevices.vue";
 import logo from "../assets/logo.svg";
-import DeviceShell from "../components/Device/DeviceShell.vue";
-import DeviceLogcat from "../components/Device/DeviceLogcat.vue";
-import DeviceInfo from "../components/Device/DeviceInfo.vue";
-import AbstractList from "./AbstractList.vue";
-import VideoContainer from "../components/Device/VideoContainer.vue";
-import NavigationBar from "../components/Device/NavigationBar.vue";
-import state from "../components/Scrcpy/scrcpy-state";
 import AppManager from "../components/Device/AppManager.vue";
-import ShareButton from '../components/Remote/ShareButton.vue'
+import DeviceInfo from "../components/Device/DeviceInfo.vue";
+import DeviceLogcat from "../components/Device/DeviceLogcat.vue";
+import DeviceShell from "../components/Device/DeviceShell.vue";
+import NavigationBar from "../components/Device/NavigationBar.vue";
+import PairedDevices from "../components/Device/PairedDevices.vue";
+import VideoContainer from "../components/Device/VideoContainer.vue";
+import ShareButton from '../components/Remote/ShareButton.vue';
+import state from "../components/Scrcpy/scrcpy-state";
+import AbstractList from "./AbstractList.vue";
 
 const { width } = useDisplay();
-/** 宽屏下是否具备显示右侧栏的条件 */
+/** Whether wide screen has the condition to display the right sidebar */
 const canShowRightPanel = computed(() => width.value >= 960);
-/** 用户手动收起右侧工具栏 */
+/** User manually collapsed the right toolbar */
 const rightPanelCollapsed = ref(false);
-/** 实际是否显示右侧栏与分隔条 */
+/** Whether to actually display the right sidebar and divider */
 const layoutShowsRightPanel = computed(
   () => canShowRightPanel.value && !rightPanelCollapsed.value
 );
@@ -32,7 +32,7 @@ const leftPanelWidth = computed(() => {
   return userSetLeftPanelWidth.value;
 });
 
-/** 小屏/单栏时用 100% 宽度，避免列布局下内联 px 与 flex 高度链断裂导致投屏区高度为 0 */
+/** Use 100% width on small screens/single column to avoid column layout inline px and flex height chain breakage causing screen area height to be 0 */
 const leftPanelOuterStyle = computed(() => {
   if (!layoutShowsRightPanel.value) {
     return { width: "100%", boxSizing: "border-box" };
@@ -108,7 +108,7 @@ const DeviceContainerRef = ref(null);
 const videoWrapperRef = ref(null);
 
 const containerDimensions = computed(() => {
-  /** 与 `.device-container` 中导航列宽 + gap 一致，无额外水平内边距 */
+  /** Consistent with navigation column width + gap in `.device-container`, no extra horizontal padding */
   const navColumnWidth = 56;
   const videoNavGap = 4;
   const canvasBorderTotal = 6;
@@ -191,9 +191,9 @@ watch(width, (newWidth, oldWidth) => {
 });
 
 const tabs = [
-  { title: "基础信息", icon: "mdi-information-outline", component: DeviceInfo },
-  { title: "应用管理", icon: "mdi-package-variant-closed", component: AppManager },
-  { title: "终端", icon: "mdi-console", component: DeviceShell },
+  { title: "Basic Information", icon: "mdi-information-outline", component: DeviceInfo },
+  { title: "App Manager", icon: "mdi-package-variant-closed", component: AppManager },
+  { title: "Terminal", icon: "mdi-console", component: DeviceShell },
   { title: "Logcat", icon: "mdi-text-box-search-outline", component: DeviceLogcat },
 ];
 
@@ -237,7 +237,7 @@ const handleAddDevice = () => {
         size="small"
         color="secondary"
         class="flex-shrink-0"
-        :title="rightPanelCollapsed ? '展开侧栏' : '收起侧栏'"
+        :title="rightPanelCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
         @click="rightPanelCollapsed = !rightPanelCollapsed"
       >
         <v-icon size="20">
@@ -252,7 +252,7 @@ const handleAddDevice = () => {
         href="https://github.com/pandatestgrid/panda-web-scrcpy"
         target="_blank"
         rel="noopener noreferrer"
-        title="源码仓库"
+        title="Source Code Repository"
       >
         <v-icon size="20">mdi-github</v-icon>
       </v-btn>
@@ -261,10 +261,10 @@ const handleAddDevice = () => {
         href="https://www.pandatest.net/device"
         target="_blank"
         rel="noopener noreferrer"
-        title="AI 助手、虚拟屏幕、设备群控、脚本录制回放、性能检测等"
+        title="AI Assistant, Virtual Screen, Device Group Control, Script Recording Playback, Performance Testing, etc."
       >
         <v-icon size="14" class="mr-1">mdi-rocket-launch-outline</v-icon>
-        加强版 · 免费
+        Enhanced Version · Free
         <v-icon size="12" class="ml-1">mdi-arrow-top-right</v-icon>
       </a>
     </div>
@@ -320,10 +320,10 @@ const handleAddDevice = () => {
                   </v-btn>
                 </div>
                 <p class="empty-state-title">
-                  {{ state.connecting ? '正在连接...' : '连接设备' }}
+                  {{ state.connecting ? 'Connecting...' : 'Connect Device' }}
                 </p>
                 <p class="empty-state-desc">
-                  {{ state.connecting ? '请稍候' : '确保设备已开启 USB 调试模式' }}
+                  {{ state.connecting ? 'Please wait for a moment...' : 'Make sure the device has USB debugging mode enabled' }}
                 </p>
               </div>
             </div>

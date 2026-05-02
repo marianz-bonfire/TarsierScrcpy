@@ -1,40 +1,41 @@
-// 导入外部依赖
+// Import external dependencies
 import { AdbDaemonWebUsbDevice } from '@yume-chan/adb-daemon-webusb';
 import { AdbScrcpyClient, AdbScrcpyOptions3_3_3 } from '@yume-chan/adb-scrcpy';
 // import { VERSION, BIN } from '@yume-chan/fetch-scrcpy-server';
 import { PcmPlayer } from '@yume-chan/pcm-player';
-import {
-    clamp,
-    ScrcpyCodecOptions,
-    h264ParseConfiguration,
-    ScrcpyInstanceId,
-    ScrcpyVideoCodecId,
-    DefaultServerPath,
-} from '@yume-chan/scrcpy';
 import type {
-    ScrcpyMediaStreamPacket,
     ScrcpyMediaStreamConfigurationPacket,
     ScrcpyMediaStreamDataPacket,
+    ScrcpyMediaStreamPacket,
 } from '@yume-chan/scrcpy';
-import { Consumable, InspectStream, ReadableStream, WritableStream } from '@yume-chan/stream-extra';
+import {
+    clamp,
+    DefaultServerPath,
+    h264ParseConfiguration,
+    ScrcpyCodecOptions,
+    ScrcpyInstanceId,
+    ScrcpyVideoCodecId,
+} from '@yume-chan/scrcpy';
 import type { VideoFrameRenderer } from "@yume-chan/scrcpy-decoder-webcodecs";
 import {
+    BitmapVideoFrameRenderer,
     WebCodecsVideoDecoder,
     WebGLVideoFrameRenderer,
-    BitmapVideoFrameRenderer,
 } from "@yume-chan/scrcpy-decoder-webcodecs";
+import { Consumable, InspectStream, ReadableStream, WritableStream } from '@yume-chan/stream-extra';
 
-// 导入本地依赖
+// Import local dependencies
 import { ScrcpyKeyboardInjector } from './input';
 import recorder from './recorder';
 
 // @ts-ignore
-import SCRCPY_SERVER_BIN from '../../../public/scrcpy-server-v3.3.3?binary';
+//import SCRCPY_SERVER_BIN from '../../../public/scrcpy-server-v3.3.3?binary';
+import SCRCPY_SERVER_BIN from '../../assets/scrcpy-server-v3.3.3?binary';
 
-// 类型定义
+// Type definitions
 type RotationListener = (rotation: number, prevRotation: number) => void;
 
-// 常量定义
+// Constants definition
 const DEFAULT_VIDEO_CODEC = 'h264';
 const DEFAULT_MAX_SIZE = 1920;
 const DEFAULT_DISPLAY_ID = 0;
@@ -44,7 +45,7 @@ const DEFAULT_FPS = 30;
 const DEFAULT_BITRATE = 8000000;
 
 export class ScrcpyState {
-    // 基本状态
+    // Basic state
     running = false;
     fullScreenContainer: HTMLDivElement | null = null;
     rendererContainer: HTMLDivElement | null = null;
@@ -54,7 +55,7 @@ export class ScrcpyState {
     height = 0;
     private _rotation = 0;
     private rotationListeners: RotationListener[] = [];
-    // 解码器和视频相关
+    // Decoder and video related
     decoder: WebCodecsVideoDecoder | undefined = undefined;
     videoCodec: 'h264' | 'h265' = DEFAULT_VIDEO_CODEC;
     videoBitRate = DEFAULT_BITRATE;
@@ -63,25 +64,25 @@ export class ScrcpyState {
     displayId = DEFAULT_DISPLAY_ID;
     powerOn = DEFAULT_POWER_ON;
 
-    // 设备和连接相关
+    // Device and connection related
     device: AdbDaemonWebUsbDevice | undefined = undefined;
     scrcpy: AdbScrcpyClient<AdbScrcpyOptions3_3_3<boolean>> | undefined = undefined;
     keyboard: ScrcpyKeyboardInjector | undefined = undefined;
     audioPlayer: PcmPlayer<unknown> | undefined = undefined;
 
-    // 性能指标
+    // Performance metrics
     fps = '0';
     bitRatesCount = 0;
     connecting = false;
 
     constructor() {
-        // 添加默认的旋转监听器
+        // Add default rotation listener
         this.addRotationListener((rotation: number, prevRotation: number) => {
-            console.log(`屏幕旋转从 ${prevRotation} 变为 ${rotation}`);
+            console.log(`Screen rotated from ${prevRotation} to ${rotation}`);
         });
     }
 
-    // 旋转相关方法
+    // Rotation related methods
     get rotation(): number {
         return this._rotation;
     }
@@ -90,15 +91,15 @@ export class ScrcpyState {
         if (this._rotation !== value) {
             const prevRotation = this._rotation;
             this._rotation = value;
-            // 通知所有监听器
+            // Notify all listeners
             this.rotationListeners.forEach((listener) => {
                 try {
                     listener(value, prevRotation);
                 } catch (error) {
-                    console.error('旋转监听器出错:', error);
+                    console.error('Rotation listener error:', error);
                 }
             });
-            // 触发视频容器重新调整大小
+            // Trigger video container resize
             this.updateVideoContainer();
         }
     }
@@ -111,12 +112,12 @@ export class ScrcpyState {
         return this.rotation & 1 ? this.width : this.height;
     }
 
-    // 添加旋转监听器
+    // Add rotation listener
     addRotationListener(listener: RotationListener): void {
         this.rotationListeners.push(listener);
     }
 
-    // 移除旋转监听器
+    // Remove rotation listener
     removeRotationListener(listener: RotationListener): void {
         const index = this.rotationListeners.indexOf(listener);
         if (index !== -1) {
@@ -124,7 +125,7 @@ export class ScrcpyState {
         }
     }
 
-    // 更新视频容器
+    // Update video container
     updateVideoContainer(): void {
         if (!this.canvas || !this.rendererContainer) {
             return;
@@ -149,63 +150,63 @@ export class ScrcpyState {
         let width: number;
         let height: number;
 
-        // 计算实际视频尺寸，考虑边框宽度
+        // Calculate actual video size, considering border width
         if (containerAspectRatio > videoAspectRatio) {
-            // 以高度为基准
+            // Use height as base
             height = containerHeight - DEFAULT_BORDER_WIDTH;
             width = height * videoAspectRatio;
         } else {
-            // 以宽度为基准
+            // Use width as base
             width = containerWidth - DEFAULT_BORDER_WIDTH;
             height = width / videoAspectRatio;
         }
 
-        // 设置视频尺寸
+        // Set video size
         this.canvas.style.width = `${width}px`;
         this.canvas.style.height = `${height}px`;
 
-        // 设置变换原点和位置
+        // Set transform origin and position
         this.canvas.style.transformOrigin = 'center';
         this.canvas.style.position = 'absolute';
         this.canvas.style.left = '50%';
         this.canvas.style.top = '50%';
         this.canvas.style.backgroundColor = 'transparent';
 
-        // 根据旋转角度设置变换
+        // Set transform based on rotation angle
         let transform = 'translate(-50%, -50%)';
         switch (this.rotation) {
-            case 1: // 90度
+            case 1: // 90 degrees
                 transform += ' rotate(90deg)';
-                // 交换宽高
+                // Swap width and height
                 [this.canvas.style.width, this.canvas.style.height] = [`${height}px`, `${width}px`];
                 break;
-            case 2: // 180度
+            case 2: // 180 degrees
                 transform += ' rotate(180deg)';
                 break;
-            case 3: // 270度
+            case 3: // 270 degrees
                 transform += ' rotate(270deg)';
-                // 交换宽高
+                // Swap width and height
                 [this.canvas.style.width, this.canvas.style.height] = [`${height}px`, `${width}px`];
                 break;
         }
         this.canvas.style.transform = transform;
 
-        // 设置其他样式
+        // Set other styles
         this.canvas.style.maxWidth = '100%';
         this.canvas.style.maxHeight = '100%';
         this.canvas.style.objectFit = 'contain';
         this.canvas.style.pointerEvents = 'auto';
     }
 
-    // 服务器相关方法
+    // Server related methods
     async pushServer(): Promise<void> {
         if (!this.device) {
-            console.error('设备不可用');
+            console.error('Device unavailable');
             return;
         }
 
         try {
-            console.log('开始推送服务器...', new Uint8Array(SCRCPY_SERVER_BIN).length);
+            console.log('Starting to push server...', new Uint8Array(SCRCPY_SERVER_BIN).length);
             const stream = new ReadableStream<Consumable<Uint8Array>>({
                 start(controller) {
                     controller.enqueue(new Consumable(new Uint8Array(SCRCPY_SERVER_BIN)));
@@ -215,11 +216,11 @@ export class ScrcpyState {
 
             await AdbScrcpyClient.pushServer(this.device as any, stream);
         } catch (error) {
-            console.error('推送服务器失败:', error);
+            console.error('Failed to push server:', error);
         }
     }
 
-    // 数据包类型检查
+    // Packet type check
     private isConfigurationPacket(
         packet: ScrcpyMediaStreamPacket
     ): packet is ScrcpyMediaStreamConfigurationPacket {
@@ -230,15 +231,15 @@ export class ScrcpyState {
         return packet.type === 'data';
     }
 
-    // 启动方法
+    // Start method
     async start(device: AdbDaemonWebUsbDevice) {
         if (!device || this.rendererContainer === undefined) {
-            throw new Error('无效的参数');
+            throw new Error('Invalid parameters');
         }
         this.device = device;
         try {
             if (!this.decoder) {
-                throw new Error('没有可用的解码器');
+                throw new Error('No available decoder');
             }
             this.connecting = true;
             await this.pushServer();
@@ -250,7 +251,7 @@ export class ScrcpyState {
                 maxFps: this.maxFps,
                 displayId: this.displayId,
                 powerOn: this.powerOn,
-                audio: false, // 禁用音频
+                audio: false, // Disable audio
                 logLevel: 'debug',
                 scid: ScrcpyInstanceId.random(),
                 sendDeviceMeta: false,
@@ -265,13 +266,13 @@ export class ScrcpyState {
             );
 
             if (!this.scrcpy) {
-                throw new Error('启动 scrcpy 客户端失败');
+                throw new Error('Failed to start scrcpy client');
             }
 
             this.scrcpy.output.pipeTo(
                 new WritableStream<string>({
                     write(chunk) {
-                        console.log(`[服务器] ${chunk}`);
+                        console.log(`[Server] ${chunk}`);
                     },
                 })
             );
@@ -279,22 +280,22 @@ export class ScrcpyState {
             if (this.scrcpy.videoStream) {
                 const videoStream = await this.scrcpy.videoStream;
                 if (!videoStream) {
-                    throw new Error('获取视频流失败');
+                    throw new Error('Failed to get video stream');
                 }
                 const { metadata: videoMetadata, stream: videoPacketStream } = videoStream;
-                // 初始化视频大小
+                // Initialize video size
                 this.width = videoMetadata.width ?? 0;
                 this.height = videoMetadata.height ?? 0;
-                this.rotation = 0; // 初始化为0，后续通过元数据更新
+                this.rotation = 0; // Initialize to 0, update later via metadata
 
-                // 设置录制器的视频元数据
+                // Set recorder video metadata
                 recorder.setVideoMetadata(videoMetadata);
 
                 if (this.decoder && videoPacketStream) {
                     videoPacketStream
                         .pipeThrough(
                             new InspectStream((packet: ScrcpyMediaStreamPacket) => {
-                                // 将数据包传递给录制器
+                                // Pass packet to recorder
                                 recorder.addVideoPacket(packet);
                                 try {
                                     if (this.isConfigurationPacket(packet)) {
@@ -304,14 +305,14 @@ export class ScrcpyState {
                                             if (croppedWidth > 0 && croppedHeight > 0) {
                                                 this.width = croppedWidth;
                                                 this.height = croppedHeight;
-                                                // 更新视频容器大小
+                                                // Update video container size
                                                 this.updateVideoContainer();
                                             }
                                         } catch (error) {
-                                            console.error('解析配置出错:', error);
+                                            console.error('Error parsing config:', error);
                                         }
                                     } else if (this.isDataPacket(packet)) {
-                                        // 更新屏幕旋转状态
+                                        // Update screen rotation state
                                         const metadata = packet.data;
                                         if (
                                             metadata &&
@@ -333,13 +334,13 @@ export class ScrcpyState {
                                         }
                                     }
                                 } catch (error) {
-                                    console.error('处理数据包出错:', error);
+                                    console.error('Error processing packet:', error);
                                 }
                             })
                         )
                         .pipeTo(this.decoder.writable)
                         .catch((error) => {
-                            console.error('处理数据包出错:', error);
+                            console.error('Error processing packet:', error);
                         });
                 }
             }
@@ -357,16 +358,16 @@ export class ScrcpyState {
         }
     }
 
-    // 停止方法
+    // Stop method
     async stop() {
-        // 首先请求关闭客户端
+        // First request to close client
         await this.scrcpy?.close();
         this.dispose();
     }
 
-    // 清理方法
+    // Cleanup method
     dispose(): void {
-        // 否则一些数据包可能仍会到达解码器
+        // Otherwise some packets may still reach the decoder
         this.decoder?.dispose();
         this.decoder = undefined;
         this.keyboard?.dispose();
@@ -386,16 +387,16 @@ export class ScrcpyState {
         this.device = undefined;
         this.canvas = undefined;
         this.running = false;
-        // 清空旋转监听器
+        // Clear rotation listeners
         this.rotationListeners = [];
     }
 
-    // 创建视频帧渲染器
+    // Create video frame renderer
     createVideoFrameRenderer(): {
         renderer: VideoFrameRenderer;
         element: HTMLVideoElement | HTMLCanvasElement;
     } {
-        // 优先使用 Canvas 渲染器，便于 captureStream 捕获视频流
+        // Prefer Canvas renderer for captureStream to capture video stream
         if (WebGLVideoFrameRenderer.isSupported) {
             const renderer = new WebGLVideoFrameRenderer();
             return { renderer, element: renderer.canvas as HTMLCanvasElement };
@@ -407,7 +408,7 @@ export class ScrcpyState {
 
     setRendererContainer(container: HTMLDivElement): void {
         if (this.decoder?.renderer) {
-            console.log('渲染器容器已更改', this.decoder);
+            console.log('Renderer container changed', this.decoder);
             this.rendererContainer = null;
             container.removeChild(this.canvas);
         }
@@ -415,7 +416,7 @@ export class ScrcpyState {
         this.fullScreenContainer = container;
         this.rendererContainer = container;
 
-        // 确保容器可以正确定位子元素
+        // Ensure container can properly position child elements
         container.style.position = 'relative';
         container.style.overflow = 'hidden';
         container.style.backgroundColor = 'transparent';
@@ -427,7 +428,7 @@ export class ScrcpyState {
         });
         container.appendChild(element);
         this.canvas = element;
-        // 初始化视频容器
+        // Initialize video container
         this.updateVideoContainer();
     }
 

@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, shallowRef, watch, computed, onUnmounted } from 'vue';
-import client from '../Scrcpy/adb-client';
-import { AdbDaemonWebUsbDeviceWatcher, AdbDaemonWebUsbDevice } from '@yume-chan/adb-daemon-webusb';
+import { AdbDaemonWebUsbDevice, AdbDaemonWebUsbDeviceWatcher } from '@yume-chan/adb-daemon-webusb';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import client, { type UnifiedDeviceMeta, type WirelessDeviceMeta } from '../Scrcpy/adb-client';
 import DeviceGuide from './DeviceGuide.vue';
+import WirelessDeviceDialog from './WirelessDeviceDialog.vue';
 
 const emit = defineEmits(['pair-device', 'remove-device', 'update-connection-status']);
 
 const showDevices = ref(false);
-const selected = shallowRef<AdbDaemonWebUsbDevice | undefined>(undefined);
+const showWirelessDialog = ref(false);
+const selected = shallowRef<UnifiedDeviceMeta | undefined>(undefined);
 const usbDeviceList = shallowRef<AdbDaemonWebUsbDevice[]>([]);
+const wirelessDeviceList = shallowRef<WirelessDeviceMeta[]>([]);
 const watcher = shallowRef<AdbDaemonWebUsbDeviceWatcher | null>(null);
 const errorMessage = ref('');
 const errorDetails = ref('');
@@ -19,8 +22,21 @@ const autoReconnectAttempts = ref(0);
 const maxAutoReconnectAttempts = 3;
 const disconnectionMessage = ref('');
 
-const deviceList = computed(() => {
-    return [...usbDeviceList.value];
+const deviceList = computed((): UnifiedDeviceMeta[] => {
+    const allDevices: UnifiedDeviceMeta[] = [];
+    
+    // Add USB devices with type marker
+    usbDeviceList.value.forEach(device => {
+        allDevices.push({
+            ...device,
+            type: 'usb' as const,
+        } as UnifiedDeviceMeta);
+    });
+    
+    // Add wireless devices
+    allDevices.push(...wirelessDeviceList.value);
+    
+    return allDevices;
 });
 
 const deviceOptions = computed(() => {
@@ -29,7 +45,7 @@ const deviceOptions = computed(() => {
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** USB/ADB 传输层疑似被占用（本页或其它客户端未释放）时可先 disconnect 再重连 */
+/** When USB/ADB transport layer appears to be occupied (by this page or other clients not released), disconnect first then reconnect */
 const isTransportOccupiedError = (e: unknown): boolean => {
     const err = e as { name?: string; message?: string };
     const name = (err?.name ?? '').toLowerCase();
@@ -43,16 +59,16 @@ const isTransportOccupiedError = (e: unknown): boolean => {
     return false;
 };
 
-const connectWithOccupancyRecovery = async (device: AdbDaemonWebUsbDevice) => {
+const connectWithOccupancyRecovery = async (device: UnifiedDeviceMeta) => {
     try {
-        await client.connect(device);
+        await client.connect(device as any);
     } catch (first: unknown) {
         if (!isTransportOccupiedError(first)) {
             throw first;
         }
         await client.disconnect();
         await sleep(450);
-        await client.connect(device);
+        await client.connect(device as any);
     }
 };
 
@@ -88,22 +104,22 @@ const selectDevice = async (device: any) => {
 
 const handleConnectionError = (error: any) => {
     if (error.message.includes('Unknown command: 48545541')) {
-        errorMessage.value = '设备连接失败：未知命令';
-        errorDetails.value = '请确保设备支持 ADB 调试，并且已在开发者选项中启用 USB 调试。';
+        errorMessage.value = 'Device connection failed: Unknown command';
+        errorDetails.value = 'Please ensure the device supports ADB debugging and USB debugging is enabled in developer options.';
     } else if (
         error.name === 'DOMException' &&
         error.message.includes('The transfer was cancelled')
     ) {
-        errorMessage.value = '设备连接失败：USB 传输被取消';
-        errorDetails.value = '请重新插拔设备并重试。如果问题持续，请尝试重启设备。';
+        errorMessage.value = 'Device connection failed: USB transfer cancelled';
+        errorDetails.value = 'Please reconnect the device and try again. If the issue persists, try restarting the device.';
     } else if (error.message.includes('No authenticator can handle the request')) {
-        errorMessage.value = '设备认证失败：无法处理认证请求';
+        errorMessage.value = 'Device authentication failed: Cannot process authentication request';
         errorDetails.value =
-            '请检查设备上的 ADB 授权设置。在设备上点击"允许 USB 调试"对话框，然后重试连接。';
+            'Please check ADB authorization settings on the device. Click "Allow USB debugging" dialog on the device, then retry connection.';
     } else {
-        errorMessage.value = `设备连接失败`;
-        errorDetails.value +=
-            '这通常是已经运行了其他 ADB 客户端导致的。通过运行 `adb kill-server` 命令来终止其他 ADB 进程，然后再重新连接当前设备。';
+        errorMessage.value = `Device connection failed`;
+        errorDetails.value =
+            'This is usually caused by other ADB clients running. Run `adb kill-server` command to terminate other ADB processes, then reconnect the current device.';
     }
     emit('update-connection-status', false);
     connectionStatus.value = 'disconnected';
@@ -120,8 +136,8 @@ const autoReconnect = async () => {
         await retryConnection();
         autoReconnectAttempts.value++;
     } else {
-        errorMessage.value = '自动重连失败';
-        errorDetails.value = '请手动重试连接或检查设备状态。';
+        errorMessage.value = 'Auto-reconnect failed';
+        errorDetails.value = 'Please manually retry connection or check device status.';
     }
 };
 
@@ -139,6 +155,13 @@ const removeDevice = async (serial: string) => {
         connectionStatus.value = 'disconnected';
     }
     usbDeviceList.value = usbDeviceList.value.filter((device) => device.serial !== serial);
+    
+    // Also remove from wireless devices if applicable
+    if (client.wirelessDevices.has(serial)) {
+        client.removeWirelessDevice(serial);
+        updateWirelessDeviceList();
+    }
+    
     emit('remove-device', serial);
     isLoading.value = false;
 };
@@ -148,23 +171,76 @@ const updateUsbDeviceList = async () => {
     try {
         usbDeviceList.value = await client.getUsbDeviceList();
     } catch (error: any) {
-        errorMessage.value = '获取设备列表失败';
-        errorDetails.value = `${error.message}。请检查设备连接并重试。`;
+        errorMessage.value = 'Failed to get device list';
+        errorDetails.value = `${error.message}. Please check device connection and try again.`;
     } finally {
         isLoading.value = false;
     }
     return usbDeviceList.value;
 };
 
+const updateWirelessDeviceList = () => {
+    wirelessDeviceList.value = client.getWirelessDevices();
+};
+
+const handleAddWirelessDevice = async (config: { host: string; port: number }) => {
+    isLoading.value = true;
+    errorMessage.value = '';
+    errorDetails.value = '';
+    
+    try {
+        const device = client.addWirelessDevice(config.host, config.port);
+        updateWirelessDeviceList();
+        await selectDevice(device);
+    } catch (error: any) {
+        errorMessage.value = 'Failed to add wireless device';
+        errorDetails.value = `${error.message}. Please ensure the device is reachable and ADB is enabled over network.`;
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+const handleAddDevice = async () => {
+    errorMessage.value = '';
+    errorDetails.value = '';
+    try {
+        const newDevice = await client.addUsbDevice();
+        if (!newDevice) {
+            return;
+        }
+        await updateUsbDeviceList();
+        const toConnect =
+            usbDeviceList.value.find((d) => d.serial === newDevice.serial) ?? newDevice;
+        await selectDevice({
+            ...toConnect,
+            type: 'usb' as const,
+        });
+    } catch (error: any) {
+        if (!errorMessage.value) {
+            errorMessage.value = 'Failed to add device';
+            errorDetails.value = `${error.message}. Please ensure the device is properly connected and USB debugging is enabled.`;
+        }
+    }
+};
+
+const openMenu = () => {
+    showDevices.value = true;
+};
+
+const openWirelessDialog = () => {
+    showWirelessDialog.value = true;
+};
+
 onMounted(async () => {
     const supported = client.isSupportedWebUsb;
     if (!supported) {
-        errorMessage.value = '浏览器不支持 WebUSB';
-        errorDetails.value = '请使用支持 WebUSB 的现代浏览器，如 Chrome 或 Edge 的最新版本。';
+        errorMessage.value = 'Browser does not support WebUSB';
+        errorDetails.value = 'Please use a modern browser that supports WebUSB, such as the latest versions of Chrome or Edge.';
         return;
     }
 
     await updateUsbDeviceList();
+    updateWirelessDeviceList();
     watcher.value = new AdbDaemonWebUsbDeviceWatcher(async () => {
         await updateUsbDeviceList();
     }, navigator.usb);
@@ -184,9 +260,9 @@ watch(deviceList, async (newList) => {
             const disconnectedDeviceName = selected.value.name || selected.value.serial;
             selected.value = undefined;
             deviceInfo.value = null;
-            errorMessage.value = '设备已断开连接';
-            errorDetails.value = '选中的设备已从列表中移除。请检查设备连接状态。';
-            disconnectionMessage.value = `设备 ${disconnectedDeviceName} 已断开连接。请检查设备连接状态。`;
+            errorMessage.value = 'Device disconnected';
+            errorDetails.value = 'The selected device has been removed from the list. Please check device connection status.';
+            disconnectionMessage.value = `Device ${disconnectedDeviceName} has been disconnected. Please check device connection status.`;
             emit('update-connection-status', false);
             connectionStatus.value = 'disconnected';
             await autoReconnect();
@@ -196,35 +272,16 @@ watch(deviceList, async (newList) => {
     }
 });
 
-const handleAddDevice = async () => {
-    errorMessage.value = '';
-    errorDetails.value = '';
-    try {
-        const newDevice = await client.addUsbDevice();
-        if (!newDevice) {
-            return;
-        }
-        await updateUsbDeviceList();
-        const toConnect =
-            usbDeviceList.value.find((d) => d.serial === newDevice.serial) ?? newDevice;
-        await selectDevice(toConnect);
-    } catch (error: any) {
-        if (!errorMessage.value) {
-            errorMessage.value = '添加设备失败';
-            errorDetails.value = `${error.message}。请确保设备已正确连接并启用了 USB 调试。`;
-        }
-    }
-};
-
-const openMenu = () => {
-    showDevices.value = true;
-};
-
-defineExpose({ handleAddDevice, openMenu });
+defineExpose({ handleAddDevice, openMenu, handleAddWirelessDevice, openWirelessDialog });
 </script>
 
 <template>
     <div class="paired-devices">
+        <WirelessDeviceDialog 
+            v-model="showWirelessDialog"
+            @add-device="handleAddWirelessDevice"
+        />
+        
         <v-menu
             v-model="showDevices"
             transition="slide-y-transition"
@@ -237,7 +294,7 @@ defineExpose({ handleAddDevice, openMenu });
                 <button class="device-trigger" v-bind="props">
                     <v-icon size="16" class="trigger-icon">mdi-cellphone-link</v-icon>
                     <span class="trigger-label">
-                        {{ selected ? (selected.name || selected.serial) : '选择设备' }}
+                    {{ selected ? (selected.name || selected.serial) : 'Select Device' }}
                     </span>
                     <span
                         class="trigger-dot"
@@ -248,11 +305,25 @@ defineExpose({ handleAddDevice, openMenu });
             </template>
             <div class="device-dropdown">
                 <div class="dd-header">
-                    <span class="dd-title">设备</span>
+                    <span class="dd-title">Devices</span>
                     <div class="dd-actions">
-                        <button class="dd-icon-btn" title="配对设备" @click="handleAddDevice">
-                            <v-icon size="18">mdi-plus</v-icon>
-                        </button>
+                        <v-menu location="start" transition="slide-x-transition">
+                            <template #activator="{ props }">
+                                <button class="dd-icon-btn" title="Add Device" v-bind="props">
+                                    <v-icon size="18">mdi-plus</v-icon>
+                                </button>
+                            </template>
+                            <v-list class="pa-0" min-width="200">
+                                <v-list-item @click="handleAddDevice">
+                                    <v-icon start size="16">mdi-usb</v-icon>
+                                    <v-list-item-title>Add USB Device</v-list-item-title>
+                                </v-list-item>
+                                <v-list-item @click="openWirelessDialog">
+                                    <v-icon start size="16">mdi-wifi</v-icon>
+                                    <v-list-item-title>Add Wireless Device</v-list-item-title>
+                                </v-list-item>
+                            </v-list>
+                        </v-menu>
                         <DeviceGuide />
                     </div>
                 </div>
@@ -262,7 +333,7 @@ defineExpose({ handleAddDevice, openMenu });
                         <strong>{{ errorMessage }}</strong>
                         <div class="text-caption mt-1">{{ errorDetails }}</div>
                         <div class="mt-2 d-flex ga-2">
-                            <v-btn v-if="selected" size="x-small" variant="text" @click="retryConnection">重试</v-btn>
+                            <v-btn v-if="selected" size="x-small" variant="text" @click="retryConnection">Retry</v-btn>
                         </div>
                     </v-alert>
                 </div>
@@ -274,11 +345,17 @@ defineExpose({ handleAddDevice, openMenu });
                 </div>
 
                 <div v-if="!deviceList.length" class="dd-section dd-empty">
-                    <p class="text-body-2 text-medium-emphasis mb-3">暂无已配对设备</p>
-                    <v-btn variant="outlined" size="small" block @click="handleAddDevice">
-                        <v-icon start size="16">mdi-cellphone-link</v-icon>
-                        添加 USB 设备
-                    </v-btn>
+                    <p class="text-body-2 text-medium-emphasis mb-3">No paired devices available</p>
+                    <div class="d-flex gap-2">
+                        <v-btn variant="outlined" size="small" flex @click="handleAddDevice">
+                            <v-icon start size="16">mdi-usb</v-icon>
+                            USB
+                        </v-btn>
+                        <v-btn variant="outlined" size="small" flex @click="openWirelessDialog">
+                            <v-icon start size="16">mdi-wifi</v-icon>
+                            Wireless
+                        </v-btn>
+                    </div>
                 </div>
 
                 <div v-else class="dd-list">
@@ -289,11 +366,16 @@ defineExpose({ handleAddDevice, openMenu });
                         @click="selectDevice(device)"
                     >
                         <div class="dd-item-icon">
-                            <v-icon size="20" color="secondary">mdi-cellphone</v-icon>
+                            <v-icon size="20" color="secondary">
+                                {{ (device as any).type === 'wireless' ? 'mdi-wifi' : 'mdi-cellphone' }}
+                            </v-icon>
                         </div>
                         <div class="dd-item-info">
                             <span class="dd-item-name">{{ device.name || device.serial }}</span>
-                            <span class="dd-item-serial">{{ device.serial }}</span>
+                            <span class="dd-item-serial">
+                                {{ (device as any).type === 'wireless' ? '📡 Wireless' : '🔌 USB' }}
+                                • {{ device.serial }}
+                            </span>
                         </div>
                         <v-icon
                             v-if="selected?.serial === device.serial"
@@ -305,7 +387,7 @@ defineExpose({ handleAddDevice, openMenu });
                         </v-icon>
                         <button
                             class="dd-icon-btn"
-                            title="移除设备"
+                            title="Remove Device"
                             @click.stop="removeDevice(device.serial)"
                         >
                             <v-icon size="16">mdi-close</v-icon>
@@ -314,7 +396,7 @@ defineExpose({ handleAddDevice, openMenu });
                 </div>
 
                 <div class="dd-footer">
-                    <button class="dd-close-btn" @click="toggleDevices">关闭</button>
+                    <button class="dd-close-btn" @click="toggleDevices">Close</button>
                 </div>
             </div>
         </v-menu>

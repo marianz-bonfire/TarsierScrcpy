@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -25,7 +25,7 @@ const drawer = computed({
   >
     <div class="drawer-inner">
       <div class="drawer-header">
-        <span class="drawer-title">选择调试设备</span>
+        <span class="drawer-title">Select Debug Device</span>
         <button class="drawer-close" @click="drawer = false">
           <v-icon size="18">mdi-close</v-icon>
         </button>
@@ -36,12 +36,12 @@ const drawer = computed({
         density="compact"
         class="mb-4 text-body-2"
       >
-        支持将本地设备快速接入平台，提供设备调试、应用管理、日志查看等功能
+        Supports quick connection of local devices to the platform, providing device debugging, app management, log viewing and other functions
       </v-alert>
       <div class="drawer-empty">
         <v-icon size="32" color="secondary" class="mb-2">mdi-cellphone-android</v-icon>
-        <p class="text-body-2 text-medium-emphasis">未检测到设备</p>
-        <p class="text-caption text-disabled">请确保设备已开启 USB 调试模式并连接到电脑</p>
+        <p class="text-body-2 text-medium-emphasis">No devices detected</p>
+        <p class="text-caption text-disabled">Please ensure device has USB debugging enabled and is connected to computer</p>
       </div>
     </div>
   </v-navigation-drawer>

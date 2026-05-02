@@ -1,4 +1,4 @@
-import { WritableStream, ReadableStream } from '@yume-chan/stream-extra';
+import { ReadableStream, WritableStream } from '@yume-chan/stream-extra';
 
 interface PickFileOptions {
     accept?: string;
@@ -22,10 +22,10 @@ export function pickFile(options: { multiple: true } & PickFileOptions): Promise
 }
 
 /**
- * 使用浏览器原生功能下载文件
- * @param buffer 文件内容
- * @param fileName 文件名
- * @param mimeType MIME类型
+ * Use browser native functions to download files
+ * @param buffer File content
+ * @param fileName File name
+ * @param mimeType MIME type
  */
 export function downloadFile(buffer: ArrayBuffer, fileName: string, mimeType: string): void {
     try {

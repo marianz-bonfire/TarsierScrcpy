@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { AndroidKeyCode, AndroidKeyEventAction, AndroidScreenPowerMode } from '@yume-chan/scrcpy';
-import state from '../Scrcpy/scrcpy-state';
+import { saveAs } from 'file-saver';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import client from '../Scrcpy/adb-client';
 import recorder from '../Scrcpy/recorder';
-import { saveAs } from 'file-saver';
+import state from '../Scrcpy/scrcpy-state';
 
 const props = defineProps({
     direction: {
@@ -50,7 +50,7 @@ onUnmounted(() => {
 
 async function takeScreenshot() {
     if (!state.decoder) {
-        console.error('截图失败: 解码器不可用');
+        console.error('Screenshot failed: decoder not available');
         return;
     }
 
@@ -63,10 +63,10 @@ async function takeScreenshot() {
         if (blob) {
             saveAs(blob, fileName);
         } else {
-            console.error('截图失败: 没有可用的视频帧');
+            console.error('Screenshot failed: no video frame available');
         }
     } catch (error) {
-        console.error('截图保存失败:', error);
+        console.error('Screenshot save failed:', error);
     }
 }
 
@@ -84,7 +84,7 @@ function recording() {
             state.scrcpy.controller.resetVideo();
         }
     } catch (error) {
-        console.error('录制操作失败:', error);
+        console.error('Recording operation failed:', error);
     }
 }
 
@@ -95,7 +95,7 @@ document.addEventListener('fullscreenchange', () => {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         state.fullScreenContainer.requestFullscreen().catch((err) => {
-            console.error(`无法进入全屏模式: ${err.message}`);
+            console.error(`Cannot enter fullscreen mode: ${err.message}`);
         });
         const canvas = state.getCanvas();
         canvas.style.height = '100%';
@@ -116,7 +116,7 @@ async function toggleScreen() {
         }
         isScreenOn.value = !isScreenOn.value;
     } catch (err) {
-        console.error(`切换屏幕状态时出错: ${err.message}`);
+        console.error(`Error switching screen state: ${err.message}`);
     }
 }
 
@@ -167,7 +167,7 @@ async function notificationPanel() {
         }
         isExpandNotificationPanel.value = !isExpandNotificationPanel.value;
     } catch (err) {
-        console.error(`展开/收起通知面板时出错: ${err.message}`);
+        console.error(`Error expanding/collapsing notification panel: ${err.message}`);
     }
 }
 
@@ -244,30 +244,30 @@ type ToolbarButton = {
 };
 
 const buttons = computed((): ToolbarButton[] => [
-    { icon: 'mdi-camera-outline', label: '截图', onClick: takeScreenshot },
+    { icon: 'mdi-camera-outline', label: 'Screenshot', onClick: takeScreenshot },
     {
         icon: isRecording.value ? 'mdi-stop-circle' : 'mdi-radiobox-marked',
-        label: isRecording.value ? `录制中 ${recordingTime.value}` : '录制',
+        label: isRecording.value ? `Recording ${recordingTime.value}` : 'Record',
         onClick: recording,
         isActive: isRecording.value,
     },
     {
         icon: isFullscreen.value ? 'mdi-fullscreen-exit' : 'mdi-fullscreen',
-        label: '全屏',
+        label: 'Fullscreen',
         onClick: toggleFullScreen,
     },
     {
         icon: isScreenOn.value ? 'mdi-eye-outline' : 'mdi-eye-off-outline',
-        label: '隐私模式',
+        label: 'Privacy Mode',
         onClick: toggleScreen,
     },
-    { icon: 'mdi-screen-rotation', label: '旋转', size: '16', onClick: rotateDevice },
-    { icon: 'mdi-bell-outline', label: '通知栏', onClick: notificationPanel },
-    { icon: 'mdi-volume-plus', label: '音量 + ', onClick: volumeUp },
-    { icon: 'mdi-volume-minus', label: '音量 -', onClick: volumeDown },
+    { icon: 'mdi-screen-rotation', label: 'Rotate', size: '16', onClick: rotateDevice },
+    { icon: 'mdi-bell-outline', label: 'Notifications', onClick: notificationPanel },
+    { icon: 'mdi-volume-plus', label: 'Volume + ', onClick: volumeUp },
+    { icon: 'mdi-volume-minus', label: 'Volume -', onClick: volumeDown },
     {
         icon: 'mdi-power-standby',
-        label: '电源',
+        label: 'Power',
         onClick: () => client.device?.power?.powerButton(),
     },
 ]);
@@ -298,7 +298,7 @@ const buttons = computed((): ToolbarButton[] => [
 
                 <button
                     class="tb-btn"
-                    title="返回"
+                    title="Back"
                     @mousedown="handleBackPointerDown"
                     @mouseup="handleBackPointerUp"
                 >
@@ -307,7 +307,7 @@ const buttons = computed((): ToolbarButton[] => [
 
                 <button
                     class="tb-btn"
-                    title="桌面"
+                    title="Home"
                     @mousedown="handleHomePointerDown"
                     @mouseup="handleHomePointerUp"
                 >
@@ -316,7 +316,7 @@ const buttons = computed((): ToolbarButton[] => [
 
                 <button
                     class="tb-btn"
-                    title="菜单"
+                    title="Menu"
                     @mousedown="handleAppSwitchPointerDown"
                     @mouseup="handleAppSwitchPointerUp"
                 >

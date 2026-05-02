@@ -8,7 +8,7 @@
                         :items="priorityOptions"
                         item-title="text"
                         item-value="value"
-                        label="日志级别"
+                        label="Log Level"
                         dense
                         hide-details
                         variant="outlined"
@@ -18,8 +18,8 @@
                     ></v-select>
                     <v-text-field
                         v-model="tagFilter"
-                        label="标签过滤"
-                        placeholder="输入标签进行过滤"
+                        label="Tag Filter"
+                        placeholder="Enter tag to filter"
                         dense
                         hide-details
                         variant="outlined"
@@ -29,8 +29,8 @@
                     ></v-text-field>
                     <v-text-field
                         v-model="searchQuery"
-                        label="搜索日志"
-                        placeholder="输入关键词搜索"
+                        label="Search Logs"
+                        placeholder="Enter keyword to search"
                         dense
                         hide-details
                         variant="outlined"
@@ -64,10 +64,10 @@
 
             <div class="log-container">
                 <div class="log-header">
-                    <div class="log-cell time">时间</div>
-                    <div class="log-cell priority">级别</div>
-                    <div class="log-cell tag">标签</div>
-                    <div class="log-cell message">消息</div>
+                    <div class="log-cell time">Time</div>
+                    <div class="log-cell priority">Level</div>
+                    <div class="log-cell tag">Tag</div>
+                    <div class="log-cell message">Message</div>
                 </div>
                 <div ref="logContainer" class="log-scroll-area">
                     <v-virtual-scroll
@@ -110,7 +110,7 @@
                 </div>
 
                 <div v-if="filteredLogs.length === 0" class="no-logs-message">
-                    {{ isRunning ? '正在等待日志...' : '没有日志可显示' }}
+                    {{ isRunning ? 'Waiting for logs...' : 'No logs available' }}
                 </div>
             </div>
         </v-card-text>
@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-// 脚本部分保持不变
+// Script section remains unchanged
 import { ref, shallowRef, computed, nextTick, watch } from 'vue';
 import client from '../Scrcpy/adb-client';
 import {
@@ -129,7 +129,7 @@ import {
 } from '@yume-chan/android-bin';
 import type { ReadableStream } from '@yume-chan/stream-extra';
 
-// 状态变量
+// State variables
 const isRunning = ref(false);
 const logs = shallowRef<AndroidLogEntry[]>([]);
 const selectedPriority = ref<AndroidLogPriority>(AndroidLogPriority.Verbose);
@@ -138,31 +138,31 @@ const searchQuery = ref('');
 const logContainer = ref<HTMLElement | null>(null);
 const isNearBottom = ref(true);
 
-// Logcat 实例
+// Logcat instance
 let logcat: Logcat | null = null;
 let logStream: ReadableStream<AndroidLogEntry> | null = null;
 let abortController: AbortController | null = null;
 let reader: ReadableStreamDefaultReader<AndroidLogEntry> | null = null;
 let shouldStopLogcat = false;
 
-// 日志队列和处理相关变量
+// Log queue and processing related variables
 const MAX_LOGS = 5000;
 const logQueue: AndroidLogEntry[] = [];
 let isProcessingQueue = false;
 let lastUpdateTime = 0;
 const UPDATE_INTERVAL = 100;
 
-// 优先级选项
+// Priority options
 const priorityOptions = [
-    { text: '详细 (V)', value: AndroidLogPriority.Verbose },
-    { text: '调试 (D)', value: AndroidLogPriority.Debug },
-    { text: '信息 (I)', value: AndroidLogPriority.Info },
-    { text: '警告 (W)', value: AndroidLogPriority.Warn },
-    { text: '错误 (E)', value: AndroidLogPriority.Error },
-    { text: '致命 (F)', value: AndroidLogPriority.Fatal },
+    { text: 'Verbose (V)', value: AndroidLogPriority.Verbose },
+    { text: 'Debug (D)', value: AndroidLogPriority.Debug },
+    { text: 'Info (I)', value: AndroidLogPriority.Info },
+    { text: 'Warn (W)', value: AndroidLogPriority.Warn },
+    { text: 'Error (E)', value: AndroidLogPriority.Error },
+    { text: 'Fatal (F)', value: AndroidLogPriority.Fatal },
 ];
 
-// 优先级颜色映射
+// Priority color mapping
 const priorityColors = {
     [AndroidLogPriority.Verbose]: 'grey darken-2',
     [AndroidLogPriority.Debug]: 'blue darken-3',
@@ -172,7 +172,7 @@ const priorityColors = {
     [AndroidLogPriority.Fatal]: 'purple darken-3',
 };
 
-// 使用计算属性来过滤日志
+// Use computed property to filter logs
 const filteredLogs = computed(() => {
     const priority = selectedPriority.value;
     const tag = tagFilter.value.toLowerCase();
@@ -186,7 +186,7 @@ const filteredLogs = computed(() => {
     });
 });
 
-// 监听过滤条件变化，当条件变化时重置滚动位置
+// Watch filter conditions change, reset scroll position when conditions change
 watch([selectedPriority, tagFilter, searchQuery], () => {
     nextTick(() => {
         if (logContainer.value) {
@@ -195,7 +195,7 @@ watch([selectedPriority, tagFilter, searchQuery], () => {
     });
 });
 
-// 切换 Logcat 状态
+// Toggle Logcat status
 const toggleLogcat = async () => {
     if (isRunning.value) {
         await stopLogcat();
@@ -204,7 +204,7 @@ const toggleLogcat = async () => {
     }
 };
 
-// 启动 Logcat
+// Start Logcat
 const startLogcat = async () => {
     try {
         logcat = new Logcat(client.device);
@@ -225,13 +225,13 @@ const startLogcat = async () => {
             }
         }
     } catch (error) {
-        console.error('启动 Logcat 失败，请检查设备连接状态', error);
+        console.error('Failed to start Logcat, please check device connection status', error);
     } finally {
         await cleanupLogcat();
     }
 };
 
-// 异步处理日志队列
+// Process log queue asynchronously
 const processLogQueue = async () => {
     isProcessingQueue = true;
     while (logQueue.length > 0 && !shouldStopLogcat) {
@@ -254,30 +254,30 @@ const processLogQueue = async () => {
     isProcessingQueue = false;
 };
 
-// 停止 Logcat
+// Stop Logcat
 const stopLogcat = async () => {
     shouldStopLogcat = true;
     isRunning.value = false;
 
-    // 等待当前的读取操作完成
+    // Wait for current read operation to complete
     if (reader) {
         try {
             await reader.cancel();
         } catch (error) {
-            console.error('取消 reader 时出错:', error);
+            console.error('Error canceling reader:', error);
         }
     }
 
     await cleanupLogcat();
 };
 
-// 清理 Logcat 资源
+// Clean up Logcat resources
 const cleanupLogcat = async () => {
     if (reader) {
         try {
             reader.releaseLock();
         } catch (error) {
-            console.error('释放 reader 锁时出错:', error);
+            console.error('Error releasing reader lock:', error);
         }
         reader = null;
     }
@@ -286,7 +286,7 @@ const cleanupLogcat = async () => {
         try {
             await logStream.cancel();
         } catch (error) {
-            console.error('取消 logStream 时出错:', error);
+            console.error('Error canceling logStream:', error);
         }
         logStream = null;
     }
@@ -300,7 +300,7 @@ const cleanupLogcat = async () => {
     logQueue.length = 0;
 };
 
-// 清除日志
+// Clear logs
 const clearLogs = async () => {
     try {
         if (logcat) {
@@ -309,11 +309,11 @@ const clearLogs = async () => {
         logs.value = [];
         logQueue.length = 0;
     } catch (error) {
-        console.error('清除日志失败，请重试', error);
+        console.error('Failed to clear logs, please retry', error);
     }
 };
 
-// 导出日志
+// Export logs
 const exportLogs = () => {
     const logText = filteredLogs.value
         .map((log) => `${formatTime(log)} ${log.tag} ${log.message}`)
@@ -329,18 +329,18 @@ const exportLogs = () => {
     URL.revokeObjectURL(url);
 };
 
-// 格式化时间
+// Format time
 const formatTime = (log: AndroidLogEntry): string => {
     const date = new Date(log.seconds * 1000 + log.nanoseconds / 1000000);
     return date.toISOString().replace('T', ' ').slice(0, -1);
 };
 
-// 获取优先级对应的颜色
+// Get color corresponding to priority
 const getPriorityColor = (priority: AndroidLogPriority): string => {
     return priorityColors[priority] || 'grey darken-2';
 };
 
-// 滚动到底部
+// Scroll to bottom
 const scrollToBottom = () => {
     if (logContainer.value) {
         logContainer.value.scrollTop = logContainer.value.scrollHeight;

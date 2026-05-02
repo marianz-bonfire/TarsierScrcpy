@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
 import { PackageManager, type PackageManagerInstallOptions } from '@yume-chan/android-bin';
-import { createFileStream, WrapConsumableStream, ProgressStream } from '../Scrcpy/file';
+import { computed, reactive, ref } from 'vue';
 import client from '../Scrcpy/adb-client';
+import { createFileStream, ProgressStream, WrapConsumableStream } from '../Scrcpy/file';
 
 enum Stage {
-    Uploading = '上传中',
-    Installing = '安装中',
-    Completed = '已完成',
-    Error = '错误',
+    Uploading = 'Uploading',
+    Installing = 'Installing',
+    Completed = 'Completed',
+    Error = 'Error',
 }
 
 interface Progress {
@@ -49,7 +49,7 @@ const handleFileDrop = (event: DragEvent) => {
 
 const install = async () => {
     if (!file.value || !client.device) {
-        errorMessage.value = !file.value ? '请选择一个 APK 文件' : '请先连接设备';
+        errorMessage.value = !file.value ? 'Please select an APK file' : 'Please connect device first';
         return;
     }
 
@@ -86,7 +86,7 @@ const install = async () => {
 
         const elapsed = Date.now() - start;
         const transferRate = (file.value.size / (elapsed / 1000) / 1024 / 1024).toFixed(2);
-        log.value = `安装完成\n耗时: ${elapsed}毫秒\n传输速率: ${transferRate}MB/秒\n${installResult || ''}`;
+        log.value = `Installation completed\nTime: ${elapsed}ms\nTransfer rate: ${transferRate}MB/s\n${installResult || ''}`;
 
         progress.value = {
             filename: file.value.name,
@@ -96,7 +96,7 @@ const install = async () => {
             value: 1,
         };
     } catch (error: any) {
-        errorMessage.value = `错误: ${error.message}`;
+        errorMessage.value = `Error: ${error.message}`;
         if (progress.value) {
             progress.value.stage = Stage.Error;
         }
@@ -136,23 +136,23 @@ const formatFileSize = (size: number) => {
                             @change="handleFileUpload"
                         />
                         <v-icon size="64" color="primary">mdi-android</v-icon>
-                        <p class="text-body-1 mt-4">点击或拖拽 APK 文件到此处</p>
-                        <p v-if="file" class="text-caption mt-2">已选择: {{ file.name }}</p>
+                        <p class="text-body-1 mt-4">Click or drag APK file here</p>
+                        <p v-if="file" class="text-caption mt-2">Selected: {{ file.name }}</p>
                     </div>
                 </v-hover>
 
                 <v-card-text v-if="file" class="text-body-2 mb-4">
-                    文件大小: {{ formatFileSize(file.size) }}
+                    File size: {{ formatFileSize(file.size) }}
                 </v-card-text>
 
                 <v-row class="mb-4">
                     <v-col cols="12" sm="6">
-                        <v-checkbox v-model="options.allowTest" label="允许测试包" density="compact" hide-details />
-                        <v-checkbox v-model="options.internalStorage" label="强制安装到内部存储" density="compact" hide-details />
+                        <v-checkbox v-model="options.allowTest" label="Allow test packages" density="compact" hide-details />
+                        <v-checkbox v-model="options.internalStorage" label="Force install to internal storage" density="compact" hide-details />
                     </v-col>
                     <v-col cols="12" sm="6">
-                        <v-checkbox v-model="options.requestDowngrade" label="允许降级安装" density="compact" hide-details />
-                        <v-checkbox v-model="options.grantRuntimePermissions" label="授予所有运行时权限" density="compact" hide-details />
+                        <v-checkbox v-model="options.requestDowngrade" label="Allow downgrade installation" density="compact" hide-details />
+                        <v-checkbox v-model="options.grantRuntimePermissions" label="Grant all runtime permissions" density="compact" hide-details />
                     </v-col>
                 </v-row>
 
@@ -165,7 +165,7 @@ const formatFileSize = (size: number) => {
                     block
                     :elevation="2"
                 >
-                    安装应用
+                    Install App
                 </v-btn>
 
                 <v-fade-transition>

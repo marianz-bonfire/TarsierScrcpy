@@ -11,7 +11,7 @@
         <v-icon size="20">mdi-arrow-left</v-icon>
       </v-btn>
       <v-app-bar-title class="text-body-2 font-weight-medium text-secondary">
-        远程观看
+        Remote Viewing
       </v-app-bar-title>
     </v-app-bar>
 
@@ -24,7 +24,7 @@
           @click="isDeviceMode = false"
         >
           <v-icon start size="16">mdi-cast-connected</v-icon>
-          远程观看
+          Remote Viewing
         </v-btn>
       </template>
     </DeviceView>
@@ -34,8 +34,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { VApp, VIcon, VBtn, VAppBar, VAppBarTitle } from 'vuetify/components';
+import { onMounted, ref } from 'vue';
+import { VApp, VAppBar, VAppBarTitle, VBtn, VIcon } from 'vuetify/components';
 import DeviceView from './views/DeviceView.vue';
 import RemoteView from './views/RemoteView.vue';
 

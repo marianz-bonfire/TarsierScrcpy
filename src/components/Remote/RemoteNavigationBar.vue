@@ -7,7 +7,7 @@
       @click="handleBack"
     >
       <v-icon>mdi-arrow-left</v-icon>
-      <v-tooltip activator="parent" location="top">返回</v-tooltip>
+      <v-tooltip activator="parent" location="top">Back</v-tooltip>
     </v-btn>
     
     <v-btn
@@ -17,7 +17,7 @@
       @click="handleHome"
     >
       <v-icon>mdi-circle-outline</v-icon>
-      <v-tooltip activator="parent" location="top">主页</v-tooltip>
+      <v-tooltip activator="parent" location="top">Home</v-tooltip>
     </v-btn>
     
     <v-btn
@@ -27,14 +27,14 @@
       @click="handleRecents"
     >
       <v-icon>mdi-square-outline</v-icon>
-      <v-tooltip activator="parent" location="top">最近任务</v-tooltip>
+      <v-tooltip activator="parent" location="top">Recent Tasks</v-tooltip>
     </v-btn>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { RemoteControlCommand } from '@/services/command-types';
+import { computed } from 'vue';
 
 const props = defineProps<{
   sendCommand: (cmd: RemoteControlCommand) => void;

@@ -1,6 +1,6 @@
 /**
- * 观看端 Hook
- * 用于连接到分享端并接收视频流，发送控制命令
+ * Viewer End Hook
+ * Used to connect to the sharing end and receive video stream, send control commands
  */
 
 import { ref, onUnmounted } from 'vue';
@@ -34,10 +34,10 @@ export function useScreenViewer(): UseScreenViewerReturn {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   /**
-   * 连接到分享端
+   * Connect to the sharing end
    */
   async function connect(remotePeerId: string): Promise<void> {
-    // 清理旧连接
+    // Clean up old connection
     if (peer && !peer.destroyed) {
       peer.destroy();
     }
@@ -53,37 +53,37 @@ export function useScreenViewer(): UseScreenViewerReturn {
     return new Promise((resolve, reject) => {
       peer = new Peer(PEER_CONFIG);
 
-      // 30 秒超时
+      // 30 second timeout
       timeout = setTimeout(() => {
         if (peer && !peer.destroyed) {
           peer.destroy();
         }
         connectionState.value = 'error';
-        error.value = '连接超时，请检查分享码是否正确';
-        reject(new Error('连接超时'));
+        error.value = 'Connection timed out, please check if the share code is correct';
+        reject(new Error('Connection timeout'));
       }, 30000);
 
-      // ========== 信令事件 1: 本地 Peer 连接成功 ==========
+      // ========== Signaling Event 1: Local Peer Connection Successful ==========
       peer.on('open', (id) => {
-        console.log('[Viewer] 已连接信令服务器，本地 ID:', id);
+        console.log('[Viewer] Connected to signaling server, local ID:', id);
 
-        // ========== 信令事件 2: 建立数据通道 ==========
+        // ========== Signaling Event 2: Establish Data Channel ==========
         dataConn = peer!.connect(remotePeerId, { reliable: true });
         
         dataConn.on('open', () => {
-          console.log('[Viewer] 数据通道已建立');
+          console.log('[Viewer] Data channel established');
         });
 
         dataConn.on('error', (err) => {
-          console.warn('[Viewer] 数据通道错误:', err);
+          console.warn('[Viewer] Data channel error:', err);
         });
 
         dataConn.on('close', () => {
-          console.log('[Viewer] 数据通道关闭');
+          console.log('[Viewer] Data channel closed');
         });
 
-        // 创建 dummy 视频流用于 SDP 协商
-        // WebRTC 需要双向媒体协商，即使观看端不发送实际视频
+        // Create dummy video stream for SDP negotiation
+        // WebRTC requires bidirectional media negotiation, even if the viewer does not send actual video
         const canvas = document.createElement('canvas');
         canvas.width = 640;
         canvas.height = 480;
@@ -94,30 +94,30 @@ export function useScreenViewer(): UseScreenViewerReturn {
         }
         const dummyStream = canvas.captureStream(1);
 
-        // ========== 信令事件 3: 发起视频请求 ==========
+        // ========== Signaling Event 3: Initiate Video Request ==========
         call = peer!.call(remotePeerId, dummyStream);
-        console.log('[Viewer] 发起视频请求，目标:', remotePeerId);
+        console.log('[Viewer] Initiating video request, target:', remotePeerId);
 
         if (!call) {
           if (timeout) clearTimeout(timeout);
           connectionState.value = 'error';
-          error.value = '无法连接到分享端';
-          reject(new Error('无法连接到分享端'));
+          error.value = 'Unable to connect to the sharing end';
+          reject(new Error('Unable to connect to the sharing end'));
           return;
         }
 
-        // ========== 信令事件 4: 收到远程视频流 ==========
+        // ========== Signaling Event 4: Received Remote Video Stream ==========
         call.on('stream', (stream) => {
-          console.log('[Viewer] 收到远程视频流');
-          console.log('[Viewer] 视频轨道数:', stream.getVideoTracks().length);
-          console.log('[Viewer] 音频轨道数:', stream.getAudioTracks().length);
+          console.log('[Viewer] Received remote video stream');
+          console.log('[Viewer] Video track count:', stream.getVideoTracks().length);
+          console.log('[Viewer] Audio track count:', stream.getAudioTracks().length);
           
           const videoTracks = stream.getVideoTracks();
           if (videoTracks.length > 0) {
             const track = videoTracks[0];
-            console.log('[Viewer] 视频轨道状态:', track.readyState, '启用:', track.enabled);
+            console.log('[Viewer] Video track status:', track.readyState, 'enabled:', track.enabled);
             const settings = track.getSettings();
-            console.log('[Viewer] 视频设置:', settings);
+            console.log('[Viewer] Video settings:', settings);
           }
           
           if (timeout) {
@@ -133,7 +133,7 @@ export function useScreenViewer(): UseScreenViewerReturn {
         });
 
         call.on('error', (err) => {
-          console.error('[Viewer] 媒体连接错误:', err);
+          console.error('[Viewer] Media connection error:', err);
           if (timeout) clearTimeout(timeout);
           connectionState.value = 'error';
           error.value = err.message;
@@ -141,25 +141,25 @@ export function useScreenViewer(): UseScreenViewerReturn {
         });
 
         call.on('close', () => {
-          console.log('[Viewer] 媒体连接关闭');
+          console.log('[Viewer] Media connection closed');
           isConnected.value = false;
           connectionState.value = 'disconnected';
           remoteStream.value = null;
         });
       });
 
-      // ========== 信令事件 5: 连接错误 ==========
+      // ========== Signaling Event 5: Connection Error ==========
       peer.on('error', (err) => {
-        console.error('[Viewer] Peer 错误:', err);
+        console.error('[Viewer] Peer error:', err);
         if (timeout) clearTimeout(timeout);
         connectionState.value = 'error';
 
         if (err.type === 'peer-unavailable') {
-          error.value = '找不到该分享，可能已停止分享或分享码错误';
+          error.value = 'Cannot find that share, it may have stopped sharing or the share code is incorrect';
         } else if (err.type === 'network') {
-          error.value = '网络连接失败';
+          error.value = 'Network connection failed';
         } else if (err.type === 'server-error') {
-          error.value = '信令服务器连接失败';
+          error.value = 'Signaling server connection failed';
         } else {
           error.value = err.message;
         }
@@ -167,7 +167,7 @@ export function useScreenViewer(): UseScreenViewerReturn {
       });
 
       peer.on('disconnected', () => {
-        console.warn('[Viewer] Peer 断开连接');
+        console.warn('[Viewer] Peer disconnected');
         if (isConnected.value) {
           connectionState.value = 'disconnected';
         }
@@ -176,7 +176,7 @@ export function useScreenViewer(): UseScreenViewerReturn {
   }
 
   /**
-   * 断开连接
+   * Disconnect
    */
   function disconnect(): void {
     if (timeout) {
@@ -198,15 +198,15 @@ export function useScreenViewer(): UseScreenViewerReturn {
     remoteStream.value = null;
     error.value = null;
 
-    console.log('[Viewer] 已断开连接');
+    console.log('[Viewer] Disconnected');
   }
 
   /**
-   * 发送触摸事件
+   * Send touch event
    */
   function sendCommand(command: RemoteControlCommand): void {
     if (!dataConn?.open) {
-      console.warn('[Viewer] 数据通道未建立，无法发送命令');
+      console.warn('[Viewer] Data channel not established, unable to send command');
       return;
     }
     dataConn.send(command);

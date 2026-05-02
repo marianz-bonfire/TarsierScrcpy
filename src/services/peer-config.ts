@@ -1,6 +1,6 @@
 /**
- * PeerJS 配置
- * 包含 STUN/TURN 服务器配置和 Peer 创建工具
+ * PeerJS configuration
+ * Contains STUN/TURN server configuration and Peer creation utilities
  */
 
 import Peer from 'peerjs';
@@ -8,11 +8,11 @@ import Peer from 'peerjs';
 export const PEER_CONFIG = {
   config: {
     iceServers: [
-      // STUN 服务器（免费，用于 NAT 穿透发现公网 IP）
+      // STUN server (free, used for NAT traversal to discover public IP)
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun.relay.metered.ca:80' },
-      // TURN 服务器（用于无法直连时中继）
+      // TURN server (used for relaying when direct connection is not possible)
       {
         urls: 'turn:global.relay.metered.ca:80',
         username: 'e8dd65c92f6a9f24b4928132',
@@ -34,7 +34,7 @@ export const PEER_CONFIG = {
 };
 
 /**
- * 生成分享码
+ * Generate share code
  */
 export function generateShareId(prefix = 'SHR'): string {
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -43,7 +43,7 @@ export function generateShareId(prefix = 'SHR'): string {
 }
 
 /**
- * 创建 PeerJS 实例
+ * Create PeerJS instance
  */
 export function createPeer(customId?: string): Peer {
   if (customId) {
@@ -53,7 +53,7 @@ export function createPeer(customId?: string): Peer {
 }
 
 /**
- * 验证分享码格式
+ * Validate share code format
  */
 export function isValidShareId(shareId: string): boolean {
   return /^SHR[A-Z0-9]{10}$/.test(shareId);

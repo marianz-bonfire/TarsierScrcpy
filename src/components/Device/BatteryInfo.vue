@@ -1,7 +1,7 @@
 <template>
   <v-card class="battery-card" flat>
     <v-card-text class="pa-6">
-      <div class="text-h6 font-weight-regular mb-4">电池</div>
+      <div class="text-h6 font-weight-regular mb-4">Battery</div>
       <div class="d-flex flex-column align-center justify-center">
         <div class="battery-circle">
           <div class="battery-background"></div>
@@ -10,23 +10,23 @@
         </div>
         <div class="mt-4 field-container">
           <div class="field-item" v-if="!isNaN(batteryChargeCounter)">
-            <span class="field-item-label">剩余电量</span>
+            <span class="field-item-label">Remaining Capacity</span>
             <span class="field-item-value">{{ batteryChargeCounter }}mAh</span>
           </div>
           <div class="field-item" v-if="!isNaN(batteryCurrent)">
-            <span class="field-item-label">当前电流</span>
+            <span class="field-item-label">Current</span>
             <span class="field-item-value">{{ formattedBatteryCurrent }}mA</span>
           </div>
           <div class="field-item" v-if="!isNaN(voltage)">
-            <span class="field-item-label">电池电压</span>
+            <span class="field-item-label">Voltage</span>
             <span class="field-item-value">{{ formattedVoltage }}V</span>
           </div>
           <div class="field-item" v-if="!isNaN(temperature)">
-            <span class="field-item-label">电池温度</span>
+            <span class="field-item-label">Temperature</span>
             <span class="field-item-value">{{ temperature }}°C</span>
           </div>
           <div class="field-item" v-if="!isNaN(batteryHealth)">
-            <span class="field-item-label">电池健康</span>
+            <span class="field-item-label">Health</span>
             <span class="field-item-value">{{ batteryHealth }}%</span>
           </div>
         </div>

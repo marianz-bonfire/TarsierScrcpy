@@ -3,11 +3,11 @@
     <div class="info-container">
       <v-fade-transition mode="out-in">
         <div class="app-grid">
-          <!-- 安装应用（在列表上方） -->
+          <!-- Install App (above the list) -->
           <div class="app-install">
             <v-card class="d-flex flex-column">
               <v-card-title class="py-2 px-4 text-subtitle-1 font-weight-semibold bg-primary-lighten-5">
-                安装应用
+                Install App
               </v-card-title>
               <v-card-text class="pt-3 pb-3">
                 <DeviceInstall @install-complete="handleInstallComplete" />
@@ -15,11 +15,11 @@
             </v-card>
           </div>
 
-          <!-- 应用列表 -->
+          <!-- App List -->
           <div class="app-list">
             <v-card class="d-flex flex-column app-list-card">
               <v-card-title class="py-2 px-4 bg-primary-lighten-5 d-flex justify-space-between align-center">
-                <span class="text-subtitle-1 font-weight-semibold">应用列表</span>
+                <span class="text-subtitle-1 font-weight-semibold">App List</span>
                 <v-btn
                   color="primary"
                   variant="tonal"
@@ -27,14 +27,14 @@
                   @click="refreshAppList"
                   :loading="loading"
                 >
-                  刷新
+                  Refresh
                 </v-btn>
               </v-card-title>
 
               <div class="px-4 py-2">
                 <v-text-field
                   v-model="search"
-                  label="搜索应用"
+                  label="Search Apps"
                   variant="outlined"
                   density="compact"
                   hide-details
@@ -60,14 +60,14 @@
                     <span class="text-body-2 text-medium-emphasis package-cell">{{ item.packageName }}</span>
                   </template>
 
-                  <!-- 版本号列 -->
+                  <!-- Version Column -->
                   <template v-slot:[slotItemVersionInfo]="{ item }">
                     <div>
-                      <div class="font-weight-medium">版本号: {{ item.versionCode || '未知' }}</div>
+                      <div class="font-weight-medium">Version Code: {{ item.versionCode || 'Unknown' }}</div>
                     </div>
                   </template>
 
-                  <!-- 操作列 -->
+                  <!-- Actions Column -->
                   <template v-slot:[slotItemActions]="{ item }">
                     <div class="d-flex gap-2 actions-container">
                       <v-btn
@@ -77,7 +77,7 @@
                         prepend-icon="mdi-play"
                         @click="launchApp(item)"
                       >
-                        启动
+                        Launch
                       </v-btn>
                       <v-btn
                         color="info"
@@ -87,7 +87,7 @@
                         @click="exportApk(item)"
                         :loading="item.exporting"
                       >
-                        导出
+                        Export
                       </v-btn>
                       <v-btn
                         color="error"
@@ -97,7 +97,7 @@
                         @click="uninstallApp(item)"
                         :loading="item.uninstalling"
                       >
-                        卸载
+                        Uninstall
                       </v-btn>
                     </div>
                   </template>
@@ -109,10 +109,10 @@
       </v-fade-transition>
     </div>
 
-    <!-- 导出进度对话框 -->
+    <!-- Export Progress Dialog -->
     <v-dialog v-model="showExportDialog" persistent max-width="400">
       <v-card>
-        <v-card-title>导出APK</v-card-title>
+        <v-card-title>ExportAPK</v-card-title>
         <v-card-text>
           <div class="text-subtitle-2 mb-2">{{ exportingApp?.appName }}</div>
           <v-progress-linear
@@ -129,21 +129,21 @@
       </v-card>
     </v-dialog>
 
-    <!-- 错误提示 -->
+    <!-- Error Message -->
     <v-snackbar v-model="showError" :color="errorType" timeout="3000" location="top">
       {{ errorMessage }}
     </v-snackbar>
 
-    <!-- 确认对话框 -->
+    <!-- Confirm Dialog -->
     <v-dialog v-model="showConfirmDialog" max-width="400">
       <v-card>
         <v-card-title class="text-h6">
-          确认卸载
+          Confirm Uninstall
         </v-card-title>
         <v-card-text>
-          确定要卸载 <strong>{{ selectedApp?.[0]?.appName }}</strong> 吗？
+          Are you sure you want to uninstall <strong>{{ selectedApp?.[0]?.appName }}</strong>?
           <div class="text-caption mt-2">
-            包名: {{ selectedApp?.[0]?.packageName }}
+            Package name: {{ selectedApp?.[0]?.packageName }}
           </div>
         </v-card-text>
         <v-card-actions>
@@ -153,7 +153,7 @@
             variant="text"
             @click="showConfirmDialog = false"
           >
-            取消
+            Cancel
           </v-btn>
           <v-btn
             color="error"
@@ -161,7 +161,7 @@
             @click="confirmUninstall"
             :loading="selectedApp?.[0]?.uninstalling"
           >
-            卸载
+            Uninstall
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -170,12 +170,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import DeviceInstall from './DeviceInstall.vue';
-import { PackageManager } from "@yume-chan/android-bin";
 import type { PackageManagerListPackagesResult } from "@yume-chan/android-bin";
-import client from '../Scrcpy/adb-client';
+import { PackageManager } from "@yume-chan/android-bin";
 import { saveAs } from 'file-saver';
+import { onMounted, ref, watch } from 'vue';
+import client from '../Scrcpy/adb-client';
+import DeviceInstall from './DeviceInstall.vue';
 
 interface ExtendedPackageInfo extends PackageManagerListPackagesResult {
   appName: string;
@@ -197,7 +197,7 @@ const exportProgress = ref(0);
 const showInstallDialog = ref(false);
 const exportingApp = ref<ExtendedPackageInfo | null>(null);
 
-/** v-data-table 插槽名（动态绑定，避免 item.xxx 被当成 v-slot modifier） */
+/** v-data-table slot name (dynamic binding, avoid item.xxx being treated as v-slot modifier) */
 const slotItemAppName = 'item.appName';
 const slotItemPackageName = 'item.packageName';
 const slotItemVersionInfo = 'item.versionInfo';
@@ -210,7 +210,7 @@ const refreshAppList = async () => {
   try {
     const appList: ExtendedPackageInfo[] = [];
     
-    // 使用 spawnAndWaitLegacy 方法执行命令
+    // Use spawnAndWaitLegacy method to execute command
     const output = await client.device.subprocess.noneProtocol!.spawnWaitText([
       'pm',
       'list',
@@ -220,7 +220,7 @@ const refreshAppList = async () => {
       '--show-versioncode', // showVersionCode
     ]);
 
-    // 处理输出结果
+    // Handle output results
     const lines = output.split('\n');
     for (const line of lines) {
       if (!line.trim()) continue;
@@ -234,15 +234,15 @@ const refreshAppList = async () => {
           exporting: false
         });
       } catch (e) {
-        console.warn('解析包信息失败:', line, e);
+        console.warn('Failed to parse package info:', line, e);
       }
     }
     
     apps.value = appList;
   } catch (error) {
-    console.error('获取应用列表失败:', error);
+    console.error('Failed to get app list:', error);
     showError.value = true;
-    errorMessage.value = '获取应用列表失败，请重试';
+    errorMessage.value = 'Failed to get app list, please retry';
   } finally {
     loading.value = false;
   }
@@ -272,13 +272,13 @@ const confirmUninstall = async () => {
     await refreshAppList();
     errorType.value = 'success';
     showError.value = true;
-    errorMessage.value = '应用卸载成功';
+    errorMessage.value = 'App uninstalled successfully';
     showConfirmDialog.value = false;
   } catch (error) {
-    console.error('卸载应用失败:', error);
+    console.error('Failed to uninstall app:', error);
     errorType.value = 'error';
     showError.value = true;
-    errorMessage.value = '卸载应用失败，请重试';
+    errorMessage.value = 'Failed to uninstall app, please retry';
   } finally {
     if (selectedApp.value[0]) {
       selectedApp.value[0].uninstalling = false;
@@ -311,12 +311,12 @@ const launchApp = async (app: ExtendedPackageInfo) => {
     
     errorType.value = 'success';
     showError.value = true;
-    errorMessage.value = '应用启动成功';
+    errorMessage.value = 'App launched successfully';
   } catch (error) {
-    console.error('启动应用失败:', error);
+    console.error('Failed to launch app:', error);
     errorType.value = 'error';
     showError.value = true;
-    errorMessage.value = '启动应用失败，请重试';
+    errorMessage.value = 'Failed to launch app, please retry';
   }
 };
 
@@ -331,7 +331,7 @@ const exportApk = async (app: ExtendedPackageInfo) => {
   try {
     const sourceDir = app.sourceDir;
     if (!sourceDir) {
-      throw new Error('无法获取应用路径');
+      throw new Error('Unable to get app path');
     }
 
     const tempDir = '/data/local/tmp';
@@ -368,7 +368,7 @@ const exportApk = async (app: ExtendedPackageInfo) => {
       
       errorType.value = 'success';
       showError.value = true;
-      errorMessage.value = 'APK导出成功';
+      errorMessage.value = 'APK exported successfully';
     } finally {
       await sync.dispose();
       await client.device.subprocess.noneProtocol!.spawnWait([
@@ -377,10 +377,10 @@ const exportApk = async (app: ExtendedPackageInfo) => {
       ]);
     }
   } catch (error) {
-    console.error('导出APK失败:', error);
+    console.error('Failed to export APK:', error);
     errorType.value = 'error';
     showError.value = true;
-    errorMessage.value = '导出APK失败，请重试';
+    errorMessage.value = 'Failed to export APK, please retry';
   } finally {
     app.exporting = false;
     exportingApp.value = null;
@@ -389,7 +389,7 @@ const exportApk = async (app: ExtendedPackageInfo) => {
   }
 };
 
-// 监听设备连接状态
+// Listen to device connection status
 watch(() => client.device, async (newDevice) => {
   if (newDevice) {
     packageManager.value = new PackageManager(newDevice);
@@ -409,28 +409,28 @@ onMounted(() => {
 
 const headers = [
   {
-    title: '应用名称',
+    title: 'App Name',
     key: 'appName',
     align: 'start' as const,
     sortable: true,
     width: '140',
   },
   {
-    title: '包名',
+    title: 'Package Name',
     key: 'packageName',
     align: 'start' as const,
     sortable: true,
     minWidth: '200',
   },
   {
-    title: '版本信息',
+    title: 'Version Info',
     key: 'versionInfo',
     align: 'start' as const,
     sortable: true,
     width: '150'
   },
   {
-    title: '操作',
+    title: 'Actions',
     key: 'actions',
     align: 'center' as const,
     sortable: false,
@@ -480,7 +480,7 @@ const headers = [
   overflow: hidden;
 }
 
-/* 表格容器样式 */
+/* Table container styles */
 .v-card-text {
   flex: 1;
   overflow: hidden;
@@ -489,7 +489,7 @@ const headers = [
   min-height: 0;
 }
 
-/* 表格样式 */
+/* Table styles */
 .app-table {
   flex: 1;
   overflow: auto;
@@ -515,7 +515,7 @@ const headers = [
   vertical-align: middle;
 }
 
-/* 固定操作列样式 */
+/* Fixed actions column styles */
 .actions-container {
   min-width: 240px;
   justify-content: flex-start;
@@ -525,10 +525,10 @@ const headers = [
   table-layout: fixed;
 }
 
-/* 确保水平滚动条正常工作 */
+/* Ensure horizontal scroll bar works properly */
 :deep(.v-data-table__wrapper) {
   overflow-x: auto !important;
 }
 
-/* 其他样式保持不变 */
+/* Other styles remain unchanged */
 </style>

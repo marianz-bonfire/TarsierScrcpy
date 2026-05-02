@@ -4,7 +4,7 @@
       <v-img :src="logo" width="40" height="40" class="mb-3" contain alt="" />
       <p class="brand-label">PANDASCRCPY</p>
 
-      <p class="welcome-hint">连接设备后即可在左侧控制</p>
+      <p class="welcome-hint">After connecting the device, you can control it on the left side</p>
 
       <div class="shortcut-list">
         <div
@@ -25,10 +25,10 @@
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span class="cta-badge">免费</span>
+        <span class="cta-badge">Free</span>
         <span class="cta-text">
-          <strong>功能加强版</strong>
-          <small>AI 助手 · 虚拟屏幕 · 设备群控 · 脚本录制回放 · 性能检测等功能，免费使用</small>
+          <strong>Enhanced Version</strong>
+          <small>AI Assistant · Virtual Screen · Device Group Control · Script Recording & Playback · Performance Testing and more, free to use</small>
         </span>
         <v-icon size="16" class="cta-arrow">mdi-arrow-right</v-icon>
       </a>
@@ -40,9 +40,9 @@
 import logo from '../assets/logo.svg';
 
 const commands = [
-  { text: '粘贴到设备', keys: ['⌘', 'V'] },
-  { text: '同上 (Win)', keys: ['Ctrl', 'V'] },
-  { text: '画面内滚动', keys: ['滚轮'] },
+  { text: 'Paste to the device', keys: ['⌘', 'V'] },
+  { text: 'Same as above (Win)', keys: ['Ctrl', 'V'] },
+  { text: 'Scroll through the screen', keys: ['Scroll Wheel'] },
 ];
 </script>
 

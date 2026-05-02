@@ -1,14 +1,14 @@
 /**
- * 坐标转换工具
- * 用于在客户端坐标、归一化坐标和设备坐标之间转换
+ * Coordinate conversion utilities
+ * Used for converting between client coordinates, normalized coordinates, and device coordinates
  */
 
 /**
- * 将客户端坐标转换为归一化坐标 (0-1)
- * @param clientX 客户端 X 坐标
- * @param clientY 客户端 Y 坐标
- * @param element 目标 HTML 元素
- * @returns 归一化坐标 { x, y }，范围 [0, 1]
+ * Convert client coordinates to normalized coordinates (0-1)
+ * @param clientX Client X coordinate
+ * @param clientY Client Y coordinate
+ * @param element Target HTML element
+ * @returns Normalized coordinates { x, y }, range [0, 1]
  */
 export function clientToNormalized(
   clientX: number,
@@ -17,11 +17,11 @@ export function clientToNormalized(
 ): { x: number; y: number } {
   const rect = element.getBoundingClientRect();
   
-  // 计算相对于元素的坐标
+  // Calculate coordinates relative to the element
   const relativeX = clientX - rect.left;
   const relativeY = clientY - rect.top;
   
-  // 归一化到 0-1 范围，并限制在有效范围内
+  // Normalize to 0-1 range and clamp within valid bounds
   const x = Math.max(0, Math.min(1, relativeX / rect.width));
   const y = Math.max(0, Math.min(1, relativeY / rect.height));
   
@@ -29,13 +29,13 @@ export function clientToNormalized(
 }
 
 /**
- * 将归一化坐标转换为设备像素坐标
- * @param normalizedX 归一化 X 坐标 (0-1)
- * @param normalizedY 归一化 Y 坐标 (0-1)
- * @param deviceWidth 设备宽度（像素）
- * @param deviceHeight 设备高度（像素）
- * @param rotation 设备旋转角度 (0, 1, 2, 3 对应 0°, 90°, 180°, 270°)
- * @returns 设备像素坐标 { x, y }
+ * Convert normalized coordinates to device pixel coordinates
+ * @param normalizedX Normalized X coordinate (0-1)
+ * @param normalizedY Normalized Y coordinate (0-1)
+ * @param deviceWidth Device width (pixels)
+ * @param deviceHeight Device height (pixels)
+ * @param rotation Device rotation angle (0, 1, 2, 3 corresponding to 0°, 90°, 180°, 270°)
+ * @returns Device pixel coordinates { x, y }
  */
 export function normalizedToDevice(
   normalizedX: number,
@@ -47,21 +47,21 @@ export function normalizedToDevice(
   let x: number;
   let y: number;
 
-  // 根据旋转角度转换坐标
+  // Convert coordinates based on rotation angle
   switch (rotation) {
-    case 0: // 0° - 正常方向
+    case 0: // 0° - Normal orientation
       x = normalizedX * deviceWidth;
       y = normalizedY * deviceHeight;
       break;
-    case 1: // 90° - 顺时针旋转
+    case 1: // 90° - Clockwise rotation
       x = normalizedY * deviceWidth;
       y = (1 - normalizedX) * deviceHeight;
       break;
-    case 2: // 180° - 倒置
+    case 2: // 180° - Inverted
       x = (1 - normalizedX) * deviceWidth;
       y = (1 - normalizedY) * deviceHeight;
       break;
-    case 3: // 270° - 逆时针旋转
+    case 3: // 270° - Counter-clockwise rotation
       x = (1 - normalizedY) * deviceWidth;
       y = normalizedX * deviceHeight;
       break;
@@ -70,7 +70,7 @@ export function normalizedToDevice(
       y = normalizedY * deviceHeight;
   }
 
-  // 确保坐标在设备范围内
+  // Ensure coordinates are within device bounds
   x = Math.max(0, Math.min(deviceWidth, Math.round(x)));
   y = Math.max(0, Math.min(deviceHeight, Math.round(y)));
 
@@ -78,10 +78,10 @@ export function normalizedToDevice(
 }
 
 /**
- * 验证归一化坐标是否在有效范围内
- * @param x 归一化 X 坐标
- * @param y 归一化 Y 坐标
- * @returns 是否有效
+ * Validate if normalized coordinates are within valid range
+ * @param x Normalized X coordinate
+ * @param y Normalized Y coordinate
+ * @returns Whether valid
  */
 export function isValidNormalizedCoord(x: number, y: number): boolean {
   return (

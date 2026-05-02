@@ -4,13 +4,13 @@
       <div class="connect-card">
         <div class="cc-header">
           <v-icon size="20" color="secondary" class="mr-2">mdi-cast-connected</v-icon>
-          <span class="cc-title">远程观看</span>
+          <span class="cc-title">Remote Viewing</span>
         </div>
         <div class="cc-body">
           <v-text-field
             v-model="hostPeerId"
-            label="分享 ID"
-            placeholder="输入分享端的 Peer ID"
+            label="Share ID"
+            placeholder="Enter the host's Peer ID"
             :disabled="connectionState === 'connecting'"
             :error-messages="error || undefined"
             hide-details="auto"
@@ -27,7 +27,7 @@
             @click="handleConnect"
           >
             <v-icon start size="16">mdi-connection</v-icon>
-            连接
+            Connect
           </v-btn>
         </div>
       </div>
@@ -37,7 +37,7 @@
       <div class="status-bar">
         <span class="status-chip">
           <span class="status-dot" />
-          已连接
+          Connected
         </span>
         <v-spacer />
         <v-btn
@@ -48,7 +48,7 @@
           @click="handleDisconnect"
         >
           <v-icon start size="14">mdi-close</v-icon>
-          断开
+          Disconnect
         </v-btn>
       </div>
 
@@ -82,20 +82,20 @@
     <v-snackbar v-model="showError" color="error" timeout="5000">
       {{ error }}
       <template v-slot:actions>
-        <v-btn variant="text" size="small" @click="showError = false">关闭</v-btn>
+        <v-btn variant="text" size="small" @click="showError = false">Close</v-btn>
       </template>
     </v-snackbar>
 
     <v-snackbar v-model="showDisconnected" color="warning" timeout="3000">
-      连接已断开
+      Connection disconnected
     </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
 import { useScreenViewer } from '@/composables/use-screen-viewer';
 import { useTouchController } from '@/composables/use-touch-controller';
+import { onMounted, ref, watch } from 'vue';
 
 const props = defineProps<{
   initialPeerId?: string;
@@ -142,7 +142,7 @@ function bindStreamToVideo() {
   if (videoElement.value && remoteStream.value) {
     videoElement.value.srcObject = remoteStream.value;
     videoElement.value.play().catch((err) => {
-      console.warn('[ViewerPanel] 视频自动播放失败:', err);
+      console.warn('[ViewerPanel] Video auto-play failed:', err);
     });
   }
 }
@@ -155,7 +155,7 @@ async function handleConnect() {
   try {
     await connect(hostPeerId.value.trim());
   } catch (err) {
-    console.error('连接失败:', err);
+    console.error('Connect failed:', err);
   }
 }
 

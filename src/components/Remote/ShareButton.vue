@@ -10,16 +10,16 @@
       @click="handleStartShare"
     >
       <v-icon start size="16">mdi-share-variant-outline</v-icon>
-      分享
+      Share
     </v-btn>
 
     <div v-else class="sharing-row">
       <button class="share-chip" @click="showShareDialog = true">
         <span class="share-dot" />
-        <span class="share-label">分享中</span>
+        <span class="share-label">Sharing</span>
         <span v-if="viewerCount > 0" class="share-badge">{{ viewerCount }}</span>
       </button>
-      <button class="share-stop" title="停止分享" @click="handleStopShare">
+      <button class="share-stop" title="Stop Sharing" @click="handleStopShare">
         <v-icon size="14">mdi-stop</v-icon>
       </button>
     </div>
@@ -27,19 +27,19 @@
     <v-dialog v-model="showShareDialog" max-width="400">
       <div class="share-dialog">
         <div class="sd-header">
-          <span class="sd-title">屏幕分享中</span>
+          <span class="sd-title">Screen Sharing</span>
           <button class="sd-close" @click="showShareDialog = false">
             <v-icon size="18">mdi-close</v-icon>
           </button>
         </div>
 
         <div class="sd-body">
-          <p class="sd-desc">将链接发给观看者，可直接打开浏览器观看设备屏幕。</p>
+          <p class="sd-desc">Send the link to viewers to directly open the browser and watch the device screen.</p>
 
           <v-text-field
             :model-value="shareLink"
             readonly
-            label="分享链接"
+            label="Share Link"
             hide-details
             class="mb-3"
           >
@@ -66,17 +66,17 @@
 
           <div class="sd-viewers">
             <v-icon size="14" color="info" class="mr-1">mdi-account-multiple</v-icon>
-            <span>{{ viewerCount }} 位观看者</span>
+            <span>{{ viewerCount }} viewers</span>
           </div>
         </div>
 
         <div class="sd-actions">
           <v-btn size="small" variant="text" color="error" @click="handleStopShare">
-            停止分享
+            Stop Sharing
           </v-btn>
           <v-spacer />
           <v-btn size="small" color="primary" @click="showShareDialog = false">
-            确定
+            OK
           </v-btn>
         </div>
       </div>
@@ -87,15 +87,15 @@
     </v-snackbar>
 
     <v-snackbar v-model="showCopied" color="success" timeout="2000">
-      已复制到剪贴板
+      Copied to clipboard
     </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
-import { useScreenShare } from '@/composables/use-screen-share';
 import scrcpyState from '@/components/Scrcpy/scrcpy-state';
+import { useScreenShare } from '@/composables/use-screen-share';
+import { computed, ref, watch } from 'vue';
 
 const {
   isSharing,
@@ -134,7 +134,7 @@ async function handleStartShare() {
   try {
     await startSharing(canvas as HTMLCanvasElement, 30);
   } catch (err) {
-    console.error('启动分享失败:', err);
+    console.error('Failed to start sharing:', err);
   }
 }
 
@@ -149,7 +149,7 @@ async function copyShareLink() {
     await navigator.clipboard.writeText(shareLink.value);
     showCopied.value = true;
   } catch (err) {
-    console.error('复制失败:', err);
+    console.error('Copy failed:', err);
   }
 }
 
@@ -159,7 +159,7 @@ async function copyPeerId() {
     await navigator.clipboard.writeText(peerId.value);
     showCopied.value = true;
   } catch (err) {
-    console.error('复制失败:', err);
+    console.error('Copy failed:', err);
   }
 }
 </script>

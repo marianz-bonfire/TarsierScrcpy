@@ -1,16 +1,16 @@
-/**
- * 分享端 Hook
- * 用于捕获 Scrcpy canvas 视频流并通过 WebRTC 分享给远程观看者
+﻿/**
+ * Sharing End Hook
+ * Used to capture Scrcpy canvas video stream and share it to remote viewers via WebRTC
  */
 
-import { ref, shallowRef, computed, onUnmounted } from 'vue';
-import type { Ref, ShallowRef } from 'vue';
-import Peer from 'peerjs';
-import type { MediaConnection, DataConnection } from 'peerjs';
-import { PEER_CONFIG, generateShareId } from '@/services/peer-config';
-import { deserializeCommand, isTouchCommand, isKeyCommand } from '@/services/command-types';
-import { normalizedToDevice } from '@/services/coord-utils';
 import scrcpyState from '@/components/Scrcpy/scrcpy-state';
+import { deserializeCommand, isKeyCommand, isTouchCommand } from '@/services/command-types';
+import { normalizedToDevice } from '@/services/coord-utils';
+import { PEER_CONFIG, generateShareId } from '@/services/peer-config';
+import type { DataConnection, MediaConnection } from 'peerjs';
+import Peer from 'peerjs';
+import type { Ref, ShallowRef } from 'vue';
+import { computed, onUnmounted, ref, shallowRef } from 'vue';
 
 export type ConnectionState = 'idle' | 'initializing' | 'ready' | 'error';
 
@@ -47,16 +47,16 @@ export function useScreenShare(): UseScreenShareReturn {
   const viewerCount = computed(() => viewers.value.length);
 
   /**
-   * 处理来自观看者的控制命令
+   * Handle control commands from viewers
    */
   function handleCommand(data: unknown): void {
     const command = typeof data === 'string' ? deserializeCommand(data) : data as any;
     if (!command) {
-      console.warn('[Host] 收到无效的控制命令:', data);
+      console.warn('[Host] Received invalid control command:', data);
       return;
     }
 
-    console.log('[Host] 收到控制命令:', command);
+    console.log('[Host] Received control command:', command);
 
     if (isTouchCommand(command)) {
       const deviceCoords = normalizedToDevice(
@@ -105,14 +105,14 @@ export function useScreenShare(): UseScreenShareReturn {
   }
 
   /**
-   * 开始分享屏幕
+   * Start Sharing Screen
    */
   async function startSharing(
     canvas: HTMLCanvasElement | HTMLVideoElement,
     frameRate: number = 30
   ): Promise<void> {
     if (isSharing.value) {
-      console.warn('[Host] 已经在分享中');
+      console.warn('[Host] Already sharing');
       return;
     }
 
@@ -120,19 +120,19 @@ export function useScreenShare(): UseScreenShareReturn {
       connectionState.value = 'initializing';
       error.value = null;
 
-      // 捕获视频流（现在统一使用 Canvas 渲染器）
+      // Capture video stream (now uniformly using Canvas renderer)
       if (canvas instanceof HTMLCanvasElement) {
-        console.log('[Host] 从 Canvas 捕获视频流，尺寸:', canvas.width, 'x', canvas.height);
+        console.log('[Host] Capturing video stream from Canvas, dimensions:', canvas.width, 'x', canvas.height);
         mediaStream = canvas.captureStream(frameRate);
       } else {
-        throw new Error('不支持的元素类型，请确保使用 Canvas 渲染器');
+        throw new Error('Unsupported element type, please ensure using Canvas renderer');
       }
 
       if (!mediaStream) {
-        throw new Error('无法获取视频流');
+        throw new Error('Unable to get video stream');
       }
 
-      // 清理旧连接
+      // Clean up old connection
       if (peer && !peer.destroyed) {
         peer.destroy();
       }
@@ -142,29 +142,29 @@ export function useScreenShare(): UseScreenShareReturn {
       await new Promise<void>((resolve, reject) => {
         peer = new Peer(customId, PEER_CONFIG);
 
-        // ========== 信令事件 1: Peer 连接成功 ==========
+        // ========== Signaling Event 1: Peer Connection Successful ==========
         peer.on('open', (id) => {
-          console.log('[Host] 已连接信令服务器，分享码:', id);
+          console.log('[Host] Connected to signaling server, share code:', id);
           peerId.value = id;
           isSharing.value = true;
           connectionState.value = 'ready';
           resolve();
         });
 
-        // ========== 信令事件 2: 收到视频请求 ==========
+        // ========== Signaling Event 2: Received Video Request ==========
         peer.on('call', (call: MediaConnection) => {
-          console.log('[Host] 收到视频请求，来自:', call.peer);
+          console.log('[Host] Received video request from:', call.peer);
           
           if (!mediaStream) {
             call.close();
             return;
           }
 
-          // 应答并发送视频流
+          // Answer and send video stream
           call.answer(mediaStream);
           mediaConnections.push(call);
 
-          // 添加到观看者列表
+          // Add to viewer list
           const viewerConnection: ViewerConnection = {
             id: call.peer,
             mediaConnection: call,
@@ -174,26 +174,26 @@ export function useScreenShare(): UseScreenShareReturn {
           viewers.value = [...viewers.value, viewerConnection];
 
           call.on('close', () => {
-            console.log('[Host] 媒体连接关闭:', call.peer);
+            console.log('[Host] Media connection closed:', call.peer);
             const idx = mediaConnections.indexOf(call);
             if (idx > -1) mediaConnections.splice(idx, 1);
             viewers.value = viewers.value.filter(v => v.id !== call.peer);
           });
 
           call.on('error', (err) => {
-            console.error('[Host] 媒体连接错误:', err);
+            console.error('[Host] Media connection error:', err);
             const idx = mediaConnections.indexOf(call);
             if (idx > -1) mediaConnections.splice(idx, 1);
             viewers.value = viewers.value.filter(v => v.id !== call.peer);
           });
         });
 
-        // ========== 信令事件 3: 收到数据连接（用于远程控制）==========
+        // ========== Signaling Event 3: Received Data Connection (for remote control) ==========
         peer.on('connection', (dataConn: DataConnection) => {
-          console.log('[Host] 收到数据连接，来自:', dataConn.peer);
+          console.log('[Host] Received data connection from:', dataConn.peer);
           dataConnections.push(dataConn);
 
-          // 更新对应观看者的 dataConnection
+          // Update the corresponding viewer's dataConnection
           const viewer = viewers.value.find(v => v.id === dataConn.peer);
           if (viewer) {
             viewer.dataConnection = dataConn;
@@ -204,24 +204,24 @@ export function useScreenShare(): UseScreenShareReturn {
           });
 
           dataConn.on('close', () => {
-            console.log('[Host] 数据连接关闭:', dataConn.peer);
+            console.log('[Host] Data connection closed:', dataConn.peer);
             const idx = dataConnections.indexOf(dataConn);
             if (idx > -1) dataConnections.splice(idx, 1);
           });
 
           dataConn.on('error', (err) => {
-            console.error('[Host] 数据连接错误:', err);
+            console.error('[Host] Data connection error:', err);
             const idx = dataConnections.indexOf(dataConn);
             if (idx > -1) dataConnections.splice(idx, 1);
           });
         });
 
-        // ========== 信令事件 4: 连接错误 ==========
+        // ========== Signaling Event 4: Connection Error ==========
         peer.on('error', (err) => {
-          console.error('[Host] Peer 错误:', err);
+          console.error('[Host] Peer error:', err);
           
           if (err.type === 'unavailable-id') {
-            // ID 被占用，尝试随机 ID
+            // ID is occupied, try random ID
             peer?.destroy();
             peer = new Peer(PEER_CONFIG);
             peer.on('open', (id) => {
@@ -238,16 +238,16 @@ export function useScreenShare(): UseScreenShareReturn {
         });
 
         peer.on('disconnected', () => {
-          console.warn('[Host] Peer 断开连接，尝试重连...');
+          console.warn('[Host] Disconnected, attempting to reconnect...');
           peer?.reconnect();
         });
       });
 
-      console.log('[Host] 开始分享，分享码:', peerId.value);
+      console.log('[Host] Started sharing, share code:', peerId.value);
 
     } catch (err) {
-      console.error('[Host] 启动分享失败:', err);
-      error.value = err instanceof Error ? err.message : '未知错误';
+      console.error('[Host] Failed to start sharing:', err);
+      error.value = err instanceof Error ? err.message : 'Unknown error';
       connectionState.value = 'error';
       stopSharing();
       throw err;
@@ -255,7 +255,7 @@ export function useScreenShare(): UseScreenShareReturn {
   }
 
   /**
-   * 停止分享
+   * Stop Sharing
    */
   function stopSharing(): void {
     mediaConnections.forEach(c => c.close());
@@ -276,7 +276,7 @@ export function useScreenShare(): UseScreenShareReturn {
     error.value = null;
     viewers.value = [];
 
-    console.log('[Host] 停止分享');
+    console.log('[Host] Stopped sharing');
   }
 
   onUnmounted(() => {

@@ -1,26 +1,26 @@
 /**
- * 触摸控制 Hook
- * 用于处理观看端的触摸和按键事件，转换为控制命令发送给分享端
+ * Touch Control Hook
+ * Used to handle touch and key events from the viewer side, convert them to control commands and send to the sharing side
  */
 
-import { ref, onUnmounted } from 'vue';
-import type { Ref } from 'vue';
+import type { KeyCommand, RemoteControlCommand, TouchCommand } from '@/services/command-types';
 import { clientToNormalized } from '@/services/coord-utils';
-import type { RemoteControlCommand, TouchCommand, KeyCommand } from '@/services/command-types';
+import type { Ref } from 'vue';
+import { onUnmounted, ref } from 'vue';
 
 export interface UseTouchControllerReturn {
-  // 绑定到视频元素的事件处理器
+  // Event handlers bound to video element
   onPointerDown: (e: PointerEvent) => void;
   onPointerMove: (e: PointerEvent) => void;
   onPointerUp: (e: PointerEvent) => void;
   onPointerCancel: (e: PointerEvent) => void;
   
-  // 按键处理
+  // Key handling
   sendBackKey: () => void;
   sendHomeKey: () => void;
   sendRecentsKey: () => void;
   
-  // 活跃的触摸点
+  // Active touch points
   activePointers: Ref<Map<number, { x: number; y: number }>>;
 }
 
@@ -28,11 +28,11 @@ export function useTouchController(
   sendCommand: (cmd: RemoteControlCommand) => void,
   videoElement: Ref<HTMLVideoElement | HTMLElement | null>
 ): UseTouchControllerReturn {
-  // 追踪活跃的触摸点
+  // Track active touch points
   const activePointers = ref<Map<number, { x: number; y: number }>>(new Map());
 
   /**
-   * 创建触摸命令
+   * Create touch command
    */
   function createTouchCommand(
     action: 'down' | 'move' | 'up',
@@ -50,7 +50,7 @@ export function useTouchController(
   }
 
   /**
-   * 创建按键命令
+   * Create key command
    */
   function createKeyCommand(key: 'back' | 'home' | 'recents'): KeyCommand {
     return {
@@ -60,104 +60,104 @@ export function useTouchController(
   }
 
   /**
-   * 处理 pointer down 事件
+   * Handle pointer down event
    */
   function onPointerDown(e: PointerEvent): void {
     if (!videoElement.value) return;
 
-    // 阻止默认行为（如文本选择）
+    // Prevent default behavior (e.g., text selection)
     e.preventDefault();
 
-    // 捕获 pointer 以接收后续事件
+    // Capture pointer to receive subsequent events
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
 
-    // 计算归一化坐标
+    // Calculate normalized coordinates
     const { x, y } = clientToNormalized(e.clientX, e.clientY, videoElement.value);
 
-    // 记录活跃的触摸点
+    // Record active touch points
     activePointers.value.set(e.pointerId, { x, y });
 
-    // 发送触摸命令
+    // Send touch command
     const command = createTouchCommand('down', x, y, e.pointerId);
     sendCommand(command);
   }
 
   /**
-   * 处理 pointer move 事件
+   * Handle pointer move event
    */
   function onPointerMove(e: PointerEvent): void {
     if (!videoElement.value) return;
 
-    // 只处理已经按下的触摸点
+    // Only handle already pressed touch points
     if (!activePointers.value.has(e.pointerId)) return;
 
     e.preventDefault();
 
-    // 计算归一化坐标
+    // Calculate normalized coordinates
     const { x, y } = clientToNormalized(e.clientX, e.clientY, videoElement.value);
 
-    // 更新触摸点位置
+    // Update touch point position
     activePointers.value.set(e.pointerId, { x, y });
 
-    // 发送触摸命令
+    // Send touch command
     const command = createTouchCommand('move', x, y, e.pointerId);
     sendCommand(command);
   }
 
   /**
-   * 处理 pointer up 事件
+   * Handle pointer up event
    */
   function onPointerUp(e: PointerEvent): void {
     if (!videoElement.value) return;
 
-    // 只处理已经按下的触摸点
+    // Only handle already pressed touch points
     if (!activePointers.value.has(e.pointerId)) return;
 
     e.preventDefault();
 
-    // 释放 pointer 捕获
+    // Release pointer capture
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
 
-    // 计算归一化坐标
+    // Calculate normalized coordinates
     const { x, y } = clientToNormalized(e.clientX, e.clientY, videoElement.value);
 
-    // 移除活跃的触摸点
+    // Remove active touch points
     activePointers.value.delete(e.pointerId);
 
-    // 发送触摸命令
+    // Send touch command
     const command = createTouchCommand('up', x, y, e.pointerId);
     sendCommand(command);
   }
 
   /**
-   * 处理 pointer cancel 事件
+   * Handle pointer cancel event
    */
   function onPointerCancel(e: PointerEvent): void {
     if (!videoElement.value) return;
 
-    // 只处理已经按下的触摸点
+    // Only handle already pressed touch points
     if (!activePointers.value.has(e.pointerId)) return;
 
-    // 释放 pointer 捕获
+    // Release pointer capture
     try {
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
-      // 忽略错误
+      // Ignore error
     }
 
-    // 获取最后已知的位置
+    // Get last known position
     const lastPos = activePointers.value.get(e.pointerId) || { x: 0.5, y: 0.5 };
 
-    // 移除活跃的触摸点
+    // Remove active touch points
     activePointers.value.delete(e.pointerId);
 
-    // 发送 up 命令以结束触摸
+    // Send up command to end touch
     const command = createTouchCommand('up', lastPos.x, lastPos.y, e.pointerId);
     sendCommand(command);
   }
 
   /**
-   * 发送返回键
+   * Send back key
    */
   function sendBackKey(): void {
     const command = createKeyCommand('back');
@@ -165,7 +165,7 @@ export function useTouchController(
   }
 
   /**
-   * 发送主页键
+   * Send home key
    */
   function sendHomeKey(): void {
     const command = createKeyCommand('home');
@@ -173,14 +173,14 @@ export function useTouchController(
   }
 
   /**
-   * 发送最近任务键
+   * Send recents key
    */
   function sendRecentsKey(): void {
     const command = createKeyCommand('recents');
     sendCommand(command);
   }
 
-  // 组件卸载时清理
+  // Clean up when component is unmounted
   onUnmounted(() => {
     activePointers.value.clear();
   });

@@ -1,81 +1,82 @@
-# PANDASCRCPY · 浏览器里的 Android 投屏与控制
+# PANDASCRCPY · Android Screen Mirroring & Control in Browser
 
-基于 **WebUSB + scrcpy** 的开源方案：用 Chrome / Edge 即可 USB 连接手机，低延迟镜像、键鼠/触控、录制与远程观看。**本仓库为开源核心；加强版（PANDAPERF）在之上提供 AI、群控与企业级性能能力，免费使用。**
+An open-source solution based on **WebUSB + scrcpy**: Use Chrome/Edge to USB-connect your Android device for low-latency mirroring, keyboard/mouse/touch control, recording, and remote viewing. **This repository contains the open-source core; the enhanced version (PANDAPERF) builds on this foundation with AI, multi-device control, and enterprise-grade performance capabilities, available for free.**
 
 ---
 
-## 在线体验（开源版）
+## Online Experience (Open Source Version)
 
-1. 手机开启 **USB 调试**，用数据线连上电脑。  
-2. 使用 **Chrome 或 Edge** 打开：  
-   **[https://pandatestgrid.github.io/PandaScrcpy/](https://pandatestgrid.github.io/PandaScrcpy/)**  
-3. 按页面提示授权 WebUSB，连接后即可投屏与操作。
+1. Enable **USB Debugging** on your Android device and connect to computer via USB cable
+2. Open **Chrome or Edge** browser and visit:  
+   **[https://pandatestgrid.github.io/PandaScrcpy/](https://pandatestgrid.github.io/PandaScrcpy/)**
+3. Follow on-screen prompts to authorize WebUSB access, then connect for screen mirroring and control
 
-### 开源版能力一览
+### Open Source Features Overview
 
-| 能力 | 说明 |
-|------|------|
-| 屏幕镜像 | WebCodecs 解码，流畅低延迟 |
-| 触控 / 键鼠 | 焦点与指针轨迹优化，减少「卡住」 |
-| 录制 / 截图 | 本地录制与快照 |
-| 远程观看 | PeerJS 分享画面给另一浏览器 |
-| 设备侧工具 | 应用管理、Logcat、ADB Shell 终端等 |
+| Feature | Description |
+|---------|-------------|
+| Screen Mirroring | WebCodecs decoding, smooth and low-latency |
+| Touch / Keyboard / Mouse | Optimized focus and pointer tracking, reduced "stuck" issues |
+| Recording / Screenshot | Local recording and snapshots |
+| Remote Viewing | Share screen with another browser via PeerJS |
+| Device-side Tools | App management, Logcat, ADB Shell terminal, etc. |
 
-建议直接打开 **[在线体验](https://pandatestgrid.github.io/panda-web-scrcpy/)** 查看实时界面
+We recommend trying the **[Live Demo](https://pandatestgrid.github.io/panda-web-scrcpy/)** to see the real-time interface
+
 ---
 
-## 加强版 PANDAPERF（免费）
+## Enhanced Version PANDAPERF (Free)
 
-**[→ 立即体验加强版](https://www.pandatest.net/device)**  
+**[→ Try Enhanced Version Now](https://www.pandatest.net/device)**  
 
-在开源投屏之上，加强版面向 **研发调试、多机测试与性能分析**，典型能力包括：
+Building upon the open-source screen mirroring, the enhanced version targets **development debugging, multi-device testing, and performance analysis** with capabilities including:
 
-- **AI 助手**：多模态理解 + 推理 + **ADB 执行闭环**——用自然语言描述任务（如打开某应用、检索、改设置），由助手规划并驱动设备完成。  
-- **设备群控**：多路同屏、批量管理，适合兼容性测试与脚本验证。  
-- **性能工作台**：CPU / 内存 / 网络 / GPU / 帧率与卡顿、电量等采集与图表（含时间轴与多指标联动）。  
-- **脚本录制与回放**：操作轨迹录制，便于回归与自动化。  
-- **虚拟屏幕、截图时间线、视觉对比** 等增强能力，持续迭代。
+- **AI Assistant**: Multi-modal understanding + reasoning + **ADB execution loop** — describe tasks in natural language (like opening apps, searching, changing settings) and the assistant plans and executes them on the device
+- **Multi-device Control**: Multiple devices on one screen, batch management, ideal for compatibility testing and script validation
+- **Performance Workbench**: CPU / Memory / Network / GPU / Frame rate & stutter, battery monitoring with charts (timeline and multi-metric correlation)
+- **Script Recording & Playback**: Record operation sequences for regression testing and automation
+- **Virtual screens, screenshot timeline, visual comparison** and other enhanced features, continuously evolving
 
-### 加强版界面预览
+### Enhanced Version Interface Preview
 
 <p align="center">
-  <img src="docs/images/pandaperf-full-workbench.png" alt="PANDAPERF 加强版：多设备投屏、AI 助手、性能曲线与 CPU 核心视图" width="920" />
+  <img src="docs/images/pandaperf-full-workbench.png" alt="PANDAPERF Enhanced Version: Multi-device screen mirroring, AI assistant, performance curves and CPU core view" width="920" />
 </p>
 
-*上图：三台设备同屏投控、右侧 AI 助手对话、底部性能时间轴（CPU / 帧率 / 内存等多指标联动）与 CPU 核心视图。*
+*Above: Three devices mirrored simultaneously, AI assistant dialog on the right, performance timeline at bottom (CPU / frame rate / memory and other metrics correlation) with CPU core view.*
 
 ---
 
-## 本地开发（开源版）
+## Local Development (Open Source Version)
 
 ```bash
 npm install
 npm run dev
 ```
 
-构建与预览：
+Build and preview:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-更多依赖与 scrcpy-server 版本见 `package.json` 与 `postinstall` 脚本。
+See `package.json` and `postinstall` scripts for dependencies and scrcpy-server version details.
 
 ---
 
-## 贡献与协议
+## Contributing & License
 
-欢迎 PR：Fork → 分支 → 提交 → Pull Request。  
-许可证：**[MIT](LICENSE)**  
+PRs welcome: Fork → Branch → Commit → Pull Request  
+License: **[MIT](LICENSE)**
 
-## 致谢
+## Acknowledgments
 
-- [Tango / ya-webadb 生态](https://github.com/yume-chan) 与 **scrcpy** 相关项目  
-- 社区贡献者与使用者反馈
+- [Tango / ya-webadb ecosystem](https://github.com/yume-chan) and **scrcpy** related projects
+- Community contributors and user feedback
 
 ---
 
 <p align="center">
-  <b>开源投屏 · 加强版 AI + 群控 + 性能 · <a href="https://www.pandatest.net/device">免费体验 PANDAPERF</a></b>
+  <b>Open Source Screen Mirroring · Enhanced AI + Multi-device + Performance · <a href="https://www.pandatest.net/device">Try PANDAPERF Free</a></b>
 </p>

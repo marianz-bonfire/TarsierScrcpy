@@ -192,6 +192,6 @@ export class VideoRecorder {
     }
 }
 
-// 创建单例实例
+// Create singleton instance
 const recorder = new VideoRecorder();
 export default recorder;

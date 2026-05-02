@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import DeviceBasicInfo from './DeviceBasicInfo.vue';
-import BatteryInfo from './BatteryInfo.vue';
-import StorageInfo from './StorageInfo.vue';
-import client from '../Scrcpy/adb-client';
 import { Adb } from '@yume-chan/adb';
+import { computed, onMounted, ref } from 'vue';
+import client from '../Scrcpy/adb-client';
+import BatteryInfo from './BatteryInfo.vue';
+import DeviceBasicInfo from './DeviceBasicInfo.vue';
+import StorageInfo from './StorageInfo.vue';
 
 const device = computed(() => client.device || undefined);
 const isLoading = ref(true);
@@ -143,7 +143,7 @@ async function getDeviceInfo() {
         abis: await adbDevice.getProp('ro.product.cpu.abilist'),
         batteryPercentage: parseInt(await executeShellCommand(adbDevice, 'dumpsys battery | grep level | awk \'{print $2}\''), 10),
         voltage: parseFloat((await executeShellCommand(
-            adbDevice, 
+            adbDevice,
             'dumpsys battery | grep "  voltage" | awk \'{print $2}\''
         )) || '0') / 1000,
         temperature: parseInt(await executeShellCommand(adbDevice, 'dumpsys battery | grep temperature | awk \'{print $2}\''), 10) / 10,
@@ -248,38 +248,33 @@ onMounted(async () => {
         <div v-else class="info-grid">
             <div class="basic-info-container">
                 <DeviceBasicInfo :deviceInfo="deviceInfo" />
-                <v-btn
-                    class="refresh-btn"
-                    icon="mdi-refresh"
-                    variant="text"
-                    size="small"
-                    :loading="isLoading"
-                    @click="refreshDeviceInfo"
-                    title="刷新设备信息"
-                />
+                <v-btn class="refresh-btn" icon="mdi-refresh" variant="text" size="small" :loading="isLoading"
+                    @click="refreshDeviceInfo" title="Refresh device information" />
             </div>
             <div class="info-side">
-                <BatteryInfo 
-                    :batteryPercentage="deviceInfo.batteryPercentage" 
-                    :voltage="deviceInfo.voltage" 
-                    :temperature="deviceInfo.temperature" 
-                    :batteryHealth="deviceInfo.batteryHealth"
+                <BatteryInfo :batteryPercentage="deviceInfo.batteryPercentage" :voltage="deviceInfo.voltage"
+                    :temperature="deviceInfo.temperature" :batteryHealth="deviceInfo.batteryHealth"
                     :batteryChargeCounter="deviceInfo.batteryChargeCounter"
-                    :batteryCurrent="deviceInfo.batteryCurrent"
-                />
+                    :batteryCurrent="deviceInfo.batteryCurrent" />
                 <StorageInfo :deviceInfo="deviceInfo" />
             </div>
             <div class="device-controls">
                 <v-btn-group variant="outlined" class="control-group">
-                    <v-btn size="small" prepend-icon="mdi-cog" @click="openSettings" title="打开系统设置">设置</v-btn>
-                    <v-btn size="small" prepend-icon="mdi-bug" @click="openDeveloperOptions" title="打开开发者选项">开发者</v-btn>
-                    <v-btn size="small" prepend-icon="mdi-web" @click="openBrowser" title="打开浏览器">浏览器</v-btn>
-                    <v-btn size="small" prepend-icon="mdi-wifi" @click="openWifiSettings" title="打开WiFi设置">WiFi</v-btn>
+                    <v-btn size="small" prepend-icon="mdi-cog" @click="openSettings"
+                        title="Open system settings">Settings</v-btn>
+                    <v-btn size="small" prepend-icon="mdi-bug" @click="openDeveloperOptions"
+                        title="Open developer options">Developer</v-btn>
+                    <v-btn size="small" prepend-icon="mdi-web" @click="openBrowser" title="Open browser">Browser</v-btn>
+                    <v-btn size="small" prepend-icon="mdi-wifi" @click="openWifiSettings"
+                        title="Open WiFi settings">WiFi</v-btn>
                 </v-btn-group>
                 <v-btn-group variant="outlined" class="control-group">
-                    <v-btn size="small" prepend-icon="mdi-cellphone-screenshot" @click="openDisplaySettings" title="打开显示设置">显示</v-btn>
-                    <v-btn size="small" prepend-icon="mdi-apps" @click="openAppSettings" title="打开应用设置">应用</v-btn>
-                    <v-btn size="small" prepend-icon="mdi-information" @click="openAboutPhone" title="关于手机">关于</v-btn>
+                    <v-btn size="small" prepend-icon="mdi-cellphone-screenshot" @click="openDisplaySettings"
+                        title="Open display settings">Display</v-btn>
+                    <v-btn size="small" prepend-icon="mdi-apps" @click="openAppSettings"
+                        title="Open app settings">Apps</v-btn>
+                    <v-btn size="small" prepend-icon="mdi-information" @click="openAboutPhone"
+                        title="About phone">About</v-btn>
                 </v-btn-group>
             </div>
         </div>
@@ -361,7 +356,7 @@ onMounted(async () => {
     }
 }
 
-/* 适配暗色主题 */
+/* Dark theme adaptation */
 :deep(.v-theme--dark) .device-controls {
     background-color: var(--v-surface-variant-dark);
 }
@@ -373,7 +368,7 @@ onMounted(async () => {
     min-height: 120px;
 }
 
-/* 适配暗色主题 */
+/* Dark theme adaptation */
 :deep(.v-theme--dark) .skeleton-card {
     background-color: var(--v-surface-variant-dark);
 }
